@@ -1,4 +1,5 @@
 ﻿# Define OIDs for different printer models
+# Xerox C400/405, B600/B605, 3330, 3325, 3655, 8045, 7025, 6510, 6600 + HP T795, M402
 $oidMapping = @{
     "Default" = @{
         Model       = ".1.3.6.1.2.1.25.3.2.1.3.1"
@@ -166,4 +167,5 @@ $oidMapping = @{
     }
     # Add other OIDs similarly
 }
+
 #endregion
