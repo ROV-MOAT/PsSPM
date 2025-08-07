@@ -41,8 +41,9 @@
     Release
 
 .LINK
-    https://github.com/lextudio/sharpsnmplib
-    Download - https://www.nuget.org/packages/Lextm.SharpSnmpLib/
+    PsSPM(ROV-MOAT) - https://github.com/ROV-MOAT/PsSPM
+    C# SNMP Library - https://github.com/lextudio/sharpsnmplib
+    Download C# SNMP Library - https://www.nuget.org/packages/Lextm.SharpSnmpLib/
 #>
 $ShowGUI = $true
 
@@ -949,4 +950,5 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+
 #endregion
