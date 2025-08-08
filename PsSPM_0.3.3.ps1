@@ -496,7 +496,8 @@ function Test-TcpConnectionParallel {
     }
 
     # Wait for completion and collect results
-    Write-Log "All $total tests started, waiting for completion..."
+    $totalTasks = $runspaces.Count
+    Write-Log "All $totalTasks tests started, waiting for completion..."
     $completedCount = 0
 
     while ($runspaces | Where-Object { -not $_.Handle.IsCompleted }) {
@@ -952,4 +953,5 @@ finally {
 }
 
 #endregion
+
 
