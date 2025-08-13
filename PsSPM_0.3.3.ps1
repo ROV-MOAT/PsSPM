@@ -721,7 +721,7 @@ try {
     Write-Log "=== Starting Printer Monitoring Version: 0.3.3 ==="
 
     # Load SharpSNMPLib.dll
-    if (-not (Add-Type -Path $DllPath -PassThru)) {
+    if (-not ([System.Reflection.Assembly]::LoadFrom($DllPath))) {
         Write-Log "Failed to load Lextm.SharpSnmpLib" -Level "ERROR"
 		throw "Missing Lextm.SharpSnmpLib Assembly; is it installed?" | Out-Null
 	} else { Write-Log "=== SharpSnmpLib: OK ===" }
@@ -953,5 +953,6 @@ finally {
 }
 
 #endregion
+
 
 
