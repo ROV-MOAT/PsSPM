@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    PsSPM(ROV-MOAT) - Powershell SNMP Printer Monitoring and Reporting Script (https://github.com/ROV-MOAT/PsSPM)
+    PsSPM(ROV-MOAT) - Powershell SNMP Printer Monitoring and Reporting Script - https://github.com/ROV-MOAT/PsSPM
     C# SNMP Library is used - https://github.com/lextudio/sharpsnmplib
 
 .DESCRIPTION
@@ -677,4 +677,5 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+
 #endregion
