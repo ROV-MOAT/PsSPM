@@ -291,7 +291,7 @@ function Show-UserGUIXaml {
     $Button1.Add_Click({
         if ($Octet5.Text -ne "" -and $Octet4.Text -ne "") {
             if ([int]$Octet4.Text -gt [int]$Octet5.Text) {
-                [System.Windows.Forms.MessageBox]::Show("To IP must be ≥ Octet 4", "Error", "OK", "Error")
+                [System.Windows.Forms.MessageBox]::Show("The ending address must be greater than the starting address.", "Error", "OK", "Error")
                 $Octet5.Focus()
                 return
             }
@@ -319,4 +319,5 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
+
 }
