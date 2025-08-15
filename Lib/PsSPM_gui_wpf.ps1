@@ -204,7 +204,7 @@ function Show-UserGUIXaml {
         $TextBoxBackspaceHandler = {
             param($sender, $e)
     
-            # Обрабатываем только Backspace
+            # Backspace
             if ($e.Key -eq [System.Windows.Input.Key]::Back) {
                 $currentIndex = [array]::IndexOf($octetBoxes, $sender)
         
@@ -360,3 +360,4 @@ function Show-UserGUIXaml {
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
 
 }
+
