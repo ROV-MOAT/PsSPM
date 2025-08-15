@@ -49,7 +49,7 @@
     C# SNMP Library - https://github.com/lextudio/sharpsnmplib
     Download C# SNMP Library - https://www.nuget.org/packages/Lextm.SharpSnmpLib/
 #>
-$ShowGUI = $false
+$ShowGUI = $true
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 #Path
@@ -684,4 +684,5 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+
 #endregion
