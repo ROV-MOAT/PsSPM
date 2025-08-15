@@ -204,11 +204,9 @@ function Show-UserGUIXaml {
         $TextBoxBackspaceHandler = {
             param($sender, $e)
     
-            # Backspace
             if ($e.Key -eq [System.Windows.Input.Key]::Back) {
                 $currentIndex = [array]::IndexOf($octetBoxes, $sender)
         
-                # Если поле пустое и это не первое поле
                 if ($sender.Text.Length -eq 0 -and $currentIndex -gt 0) {
                     $octetBoxes[$currentIndex - 1].Focus()
                     $octetBoxes[$currentIndex - 1].CaretIndex = $octetBoxes[$currentIndex - 1].Text.Length
@@ -360,4 +358,5 @@ function Show-UserGUIXaml {
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
 
 }
+
 
