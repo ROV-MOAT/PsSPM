@@ -9,7 +9,7 @@
 .NOTES
     Version: 0.3.4
     Author: Oleg Ryabinin + AI
-    Date: 2025-08-12
+    Date: 2025-08-15
     
     MESSAGE:
     Powershell 5+
@@ -686,3 +686,4 @@ finally {
 }
 
 #endregion
+
