@@ -168,17 +168,10 @@ function Show-UserGUIXaml {
         param (
             [string]$BaseIP = "10.10.10",
             [int]$StartIP = 1,
-            [int]$EndIP = 120
+            [int]$EndIP = 120,
+            $ipList = @()
         )
 
-        if ($StartIP -gt $EndIP) {
-            $Octet5.Text = ""
-            $Octet5.Focus()
-            [System.Windows.Forms.MessageBox]::Show("Octet 5 must be ≤ Octet 4", "Error", "OK", "Error")
-            return @()
-        }
-
-        $ipList = @()
         for ($i = $StartIP; $i -le $EndIP; $i++) { $ipList += [PSCustomObject]@{ Value = "$BaseIP.$i" } }
 
         return $ipList
@@ -373,4 +366,5 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
+
 }
