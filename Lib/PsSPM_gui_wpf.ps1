@@ -338,7 +338,7 @@ function Show-UserGUIXaml {
             }
         } elseif ($FileComboBox.SelectedItem -notlike $null -and $FileComboBox.SelectedItem -ne "") {
             $script:selectedFile = Join-Path -Path $Directory -ChildPath $FileComboBox.SelectedItem
-        } else { [System.Windows.Forms.MessageBox]::Show("Enter IP range or select a file.", "Warning", "OK", "Warning")
+        } else { [System.Windows.Forms.MessageBox]::Show("Enter IP address or select a file.", "Warning", "OK", "Warning")
             return
         }
 
@@ -358,4 +358,5 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
+
 }
