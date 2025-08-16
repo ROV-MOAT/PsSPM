@@ -81,24 +81,6 @@ $LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 [int]$RetryDelayMs = 2000  # Milliseconds (1 sec. = 1000 ms)
 [int]$TCPThreads = 10      # Ьaximum number of running TCP threads
 
- # More flexible model matching with wildcards
-$modelPatterns = @{
-    "*333*" = "333"
-    "*B60*" = "B60"
-    "*B70*" = "B60"  # Same as B60
-    "*M40*" = "M40"
-    "*B80*" = "B80"
-    "*365*" = "365"
-    "*594*" = "365"  # Same as 365
-    "*462*" = "365"  # Same as 365
-    "*C40*" = "C40"
-    "*650*" = "660"  # Same as 660
-    "*660*" = "660"
-    "*651*" = "651"
-    "*T79*" = "T79"
-    "*332*" = "332"
-}
-
 #region Helper Functions
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
 if (-not (Test-Path $ReportDir)) { New-Item -ItemType Directory -Path $ReportDir | Out-Null }
@@ -686,5 +668,6 @@ finally {
 }
 
 #endregion
+
 
 
