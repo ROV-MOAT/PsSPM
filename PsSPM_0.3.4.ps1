@@ -379,14 +379,14 @@ function Get-TonerPercentage {
 }
 
 function Format-Status {
-    param([string]$Status)
+    param([string]$TcpStatus)
     
-    $class = switch ($Tcpstatus) {
+    $class = switch ($TcpStatus) {
         "Online"  { "online" }
         "Offline" { "offline" }
         default   { "error" }
     }
-    return "<center><span class='$class'>$Tcpstatus</span></center>"
+    return "<center><span class='$class'>$TcpStatus</span></center>"
 }
 
 function Format-Value {
@@ -502,7 +502,7 @@ try {
         $currentPrinter++
         $printerIP = $currentPrinterIP.Device
         $OnlineDevice = $currentPrinterIP.Connected
-        $Tcpstatus = $null
+        $TcpStatus = $null
         $model = $null
         $printername = $null
         $serial = $null
@@ -517,13 +517,13 @@ try {
         if ($OnlineDevice -like 'false') {
             Write-Host "$currentPrinter : $printerIP - Offline" -ForegroundColor Red
             Write-Log "Checking printer: $printerIP - Offline"
-            $Tcpstatus = "Offline"
+            $TcpStatus = "Offline"
         }
         else {
             try {
                 # Get printer model to determine OIDs to use
                 $model = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].Model
-                $Tcpstatus = "Online"
+                $TcpStatus = "Online"
                 Write-Host "$currentPrinter : $printerIP - $model" -ForegroundColor Green
                 Write-Log "Checking printer: $printerIP - Online"
                 $printername = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].PName
@@ -561,7 +561,7 @@ try {
             }
             catch {
                 Write-Log "Error querying $printerIP : $_" -Level "ERROR"
-                $Tcpstatus = "Error"
+                $TcpStatus = "Error"
             }
         }
 
@@ -576,7 +576,7 @@ try {
             $null = $DataHtmlReport.Add([PSCustomObject]@{
                 "<span>IP</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$printerIP</a>"
                 "<span>Name</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$printername</a>"
-                "<span>Ping</span>" = Format-Status -Status $Tcpstatus
+                "<span>Ping</span>" = Format-Status -TcpStatus $TcpStatus
                 "<span>Model</span>" = Format-Value -Value $model -Default ""
                 "<span>S/N</span>" = Format-Value -Value $serial -Default ""
                 "<span>Black</span>" = Format-Value -Value $counters.Black -Default ""
@@ -682,6 +682,7 @@ finally {
 }
 
 #endregion
+
 
 
 
