@@ -338,7 +338,24 @@ function Get-PrinterModelOIDSet {
         [Parameter(Mandatory=$true)]
         [hashtable]$OIDMapping
     )
-    
+	
+    # More flexible model matching with wildcards
+    $modelPatterns = @{
+        "*333*" = "333"
+        "*B60*" = "B60"
+        "*B70*" = "B60"  # Same as B60
+        "*M40*" = "M40"
+        "*B80*" = "B80"
+        "*365*" = "365"
+        "*594*" = "365"  # Same as 365
+        "*462*" = "365"  # Same as 365
+        "*C40*" = "C40"
+        "*650*" = "660"  # Same as 660
+        "*660*" = "660"
+        "*651*" = "651"
+        "*T79*" = "T79"
+        "*332*" = "332"
+    }
     foreach ($pattern in $modelPatterns.Keys) {
         if ($Model -like $pattern) { return $OIDMapping[$modelPatterns[$pattern]] }
     }
@@ -668,6 +685,7 @@ finally {
 }
 
 #endregion
+
 
 
 
