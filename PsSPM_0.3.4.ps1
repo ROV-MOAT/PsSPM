@@ -374,11 +374,8 @@ function Get-TonerPercentage {
 
     $total = Get-SnmpData -Target $Target -Oid $TotalOID
     $current = Get-SnmpData -Target $Target -Oid $CurrentOID
-
-    $TotalInt = [Convert]::ToInt32($total.ToString())
-    $CurrentInt = [Convert]::ToInt32($current.ToString())
     
-    if ($TotalInt -gt 0) { return [math]::Round(($CurrentInt / $TotalInt) * 100) } else { return 0 }
+    if ([int]$Total -gt 0) { return [math]::Round(([int]$Current / [int]$Total) * 100) } else { return 0 }
 }
 
 function Format-Status {
@@ -685,6 +682,7 @@ finally {
 }
 
 #endregion
+
 
 
 
