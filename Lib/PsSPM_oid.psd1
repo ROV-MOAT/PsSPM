@@ -1,24 +1,7 @@
 ﻿# Define OIDs for different printer models
 # Xerox C400/405, B600/B605, 3330, 3325, 3655, 8045, 7025, 6510, 6600 + HP T795, M402
-# More flexible model matching with wildcards
-$modelPatterns = @{
-    "*333*" = "333"
-    "*B60*" = "B60"
-    "*B70*" = "B60"  # Same as B60
-    "*M40*" = "M40"
-    "*B80*" = "B80"
-    "*365*" = "365"
-    "*594*" = "365"  # Same as 365
-    "*462*" = "365"  # Same as 365
-    "*C40*" = "C40"
-    "*650*" = "660"  # Same as 660
-    "*660*" = "660"
-    "*651*" = "651"
-    "*T79*" = "T79"
-    "*332*" = "332"
-}
 
-$oidMapping = @{
+$Script:oidMapping = @{
     "Default" = @{
         Model       = ".1.3.6.1.2.1.25.3.2.1.3.1"
         PName       = ".1.3.6.1.2.1.1.5.0"
@@ -187,4 +170,5 @@ $oidMapping = @{
 }
 
 #endregion
+
 
