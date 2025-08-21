@@ -372,8 +372,8 @@ function Get-TonerPercentage {
         [string]$CurrentOID
     )
 
-    $total = Get-SnmpData -Target $Target -Oid $TotalOID
-    $current = Get-SnmpData -Target $Target -Oid $CurrentOID
+    $total = Get-SnmpData -Target $Target -Oid $TotalOID -TimeoutMsUDP $TimeoutMsUDP
+    $current = Get-SnmpData -Target $Target -Oid $CurrentOID -TimeoutMsUDP $TimeoutMsUDP
     
     if ([int]$Total -gt 0) { return [math]::Round(([int]$Current / [int]$Total) * 100) } else { return 0 }
 }
@@ -522,11 +522,11 @@ try {
         else {
             try {
                 # Get printer model to determine OIDs to use
-                $model = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].Model
+                $model = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].Model -TimeoutMsUDP $TimeoutMsUDP
                 $TcpStatus = "Online"
                 Write-Host "$currentPrinter : $printerIP - $model" -ForegroundColor Green
                 Write-Log "Checking printer: $printerIP - Online"
-                $printername = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].PName
+                $printername = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].PName -TimeoutMsUDP $TimeoutMsUDP
 
                 # Determine OID set based on model
                 $oidSet = Get-PrinterModelOIDSet -Model $model -OIDMapping $oidMapping
@@ -535,9 +535,9 @@ try {
                 if ($oidSet.Serial) { $serial = Get-SnmpData -Target $printerIP -Oid $oidSet.Serial }
 
                 # Get counter values
-                if ($oidSet.BlackCount) { $counters.Black = Get-SnmpData -Target $printerIP -Oid $oidSet.BlackCount }
-                if ($oidSet.ColorCount) { $counters.Color = Get-SnmpData -Target $printerIP -Oid $oidSet.ColorCount }
-                if ($oidSet.TotalCount) { $counters.Total = Get-SnmpData -Target $printerIP -Oid $oidSet.TotalCount }
+                if ($oidSet.BlackCount) { $counters.Black = Get-SnmpData -Target $printerIP -Oid $oidSet.BlackCount -TimeoutMsUDP $TimeoutMsUDP }
+                if ($oidSet.ColorCount) { $counters.Color = Get-SnmpData -Target $printerIP -Oid $oidSet.ColorCount -TimeoutMsUDP $TimeoutMsUDP }
+                if ($oidSet.TotalCount) { $counters.Total = Get-SnmpData -Target $printerIP -Oid $oidSet.TotalCount -TimeoutMsUDP $TimeoutMsUDP }
                 
                 # Get toner levels
                 if ($oidSet.TonerK) { $tonerLevels.TK = Get-TonerPercentage -Target $printerIP -TotalOID $oidSet.TonerK.Total -CurrentOID $oidSet.TonerK.Current }
@@ -556,8 +556,8 @@ try {
                 }
 
                 # Get printer status values
-                if ($oidSet.Display) { $pdisplay = Get-SnmpWalkWithEncoding -Target $printerIP -Oid $oidSet.Display }
-                if ($oidSet.Status) { $pstatus = Get-SnmpWalkWithEncoding -Target $printerIP -Oid $oidSet.Status }
+                if ($oidSet.Display) { $pdisplay = Get-SnmpWalkWithEncoding -Target $printerIP -Oid $oidSet.Display -TimeoutMsUDP $TimeoutMsUDP }
+                if ($oidSet.Status) { $pstatus = Get-SnmpWalkWithEncoding -Target $printerIP -Oid $oidSet.Status -TimeoutMsUDP $TimeoutMsUDP }
             }
             catch {
                 Write-Log "Error querying $printerIP : $_" -Level "ERROR"
@@ -682,6 +682,7 @@ finally {
 }
 
 #endregion
+
 
 
 
