@@ -372,10 +372,11 @@ function Get-TonerPercentage {
         [string]$CurrentOID
     )
 
-    $total = Get-SnmpData -Target $Target -Oid $TotalOID -TimeoutMsUDP $TimeoutMsUDP
-    $current = Get-SnmpData -Target $Target -Oid $CurrentOID -TimeoutMsUDP $TimeoutMsUDP
-    
-    if ([int]$Total -gt 0) { return [math]::Round(([int]$Current / [int]$Total) * 100) } else { return 0 }
+	if ($Total = Get-SnmpData -Target $Target -Oid $TotalOID -TimeoutMsUDP $TimeoutMsUDP) {
+        if ($Current = Get-SnmpData -Target $Target -Oid $CurrentOID -TimeoutMsUDP $TimeoutMsUDP) {
+            if ([int]$Total -gt 0) { return [math]::Round(([int]$Current / [int]$Total) * 100) } else { return 0 }
+        }
+    }
 }
 
 function Format-Status {
@@ -682,6 +683,7 @@ finally {
 }
 
 #endregion
+
 
 
 
