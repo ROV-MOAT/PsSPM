@@ -4,9 +4,9 @@ $xaml = @'
 <Window 
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PsSPM 0.3.4" SizeToContent="WidthAndHeight" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True" FontFamily="Segoe UI" FontSize="13">
+        Title="PsSPM 0.3.5b" SizeToContent="WidthAndHeight" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True" FontFamily="Segoe UI" FontSize="13">
         
-    <Grid x:Name="grid1" ShowGridLines="false">
+    <Grid x:Name="grid1" ShowGridLines="false" Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
@@ -17,12 +17,12 @@ $xaml = @'
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Column="0" Grid.Row="0">
-            <GroupBox Header="Report" Padding="5">
+            <GroupBox Header="Report">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
                     <StackPanel Orientation="Horizontal">
-                        <CheckBox x:Name="HtmlCheckBox" Content="HTML" Margin="5,0,0,0"/>
-                        <CheckBox x:Name="CsvCheckBox" Content="CSV" Margin="5,0,0,0"/>
-                        <CheckBox x:Name="LogCheckBox" Content="Log" Margin="5,0,0,0"/>
+                        <CheckBox x:Name="HtmlCheckBox" Content="HTML" Margin="10"/>
+                        <CheckBox x:Name="CsvCheckBox" Content="CSV" Margin="10"/>
+                        <CheckBox x:Name="LogCheckBox" Content="Log" Margin="10"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                         <Label Content="CSV buffer (line):" Margin="0"/>
@@ -30,7 +30,7 @@ $xaml = @'
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Header="SNMP Settings" Padding="5">
+            <GroupBox Header="SNMP Settings" Margin="0,20,0,0">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
                     <StackPanel Orientation="Horizontal">
                         <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
@@ -42,9 +42,15 @@ $xaml = @'
             </GroupBox>
         </StackPanel>
 
-        <GroupBox Grid.Column="1" Grid.Row="0" Header="TCP Settings" Padding="5">
+        <GroupBox Grid.Column="1" Grid.Row="0" Header="TCP Settings">
         <Border CornerRadius="5" BorderBrush="Gray" BorderThickness="0" Padding="0" Margin="0">
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
+                <StackPanel Orientation="Horizontal">
+                    <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
+                        <Label Content="TCP Port:" DockPanel.Dock="Left" Margin="0"/>
+                        <TextBox x:Name="TCPPortSet" TextAlignment="Center" DockPanel.Dock="Right" MaxLength="5" Width="45" Height="20" Margin="0"/>
+                    </DockPanel>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
                         <Label Content="Timeout (ms):" DockPanel.Dock="Left" Margin="0"/>
@@ -73,7 +79,7 @@ $xaml = @'
             </Border>
         </GroupBox>
 
-        <GroupBox Grid.Column="0" Grid.Row="1" Header="Device pool" Padding="5">
+        <GroupBox Grid.Column="0" Grid.Row="1" Header="Device pool">
             <StackPanel>
                 <Label Content="Enter IP range:" Margin="0"/>
                 <StackPanel Name="IpStackPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -128,6 +134,9 @@ function Show-UserGUIXaml {
 
     $SNMPTimeout = $form.FindName("SNMPTimeout")
     $SNMPTimeout.text = $TimeoutMsUDP
+
+    $TCPPortSet = $form.FindName("TCPPortSet")
+    $TCPPortSet.text = $TCPPort
 
     $TCPTimeout = $form.FindName("TCPTimeout")
     $TCPTimeout.text = $TimeoutMsTCP
@@ -214,7 +223,7 @@ function Show-UserGUIXaml {
                 }
             }
         }
-        $SettingBoxes = @($CSVBuffer, $SNMPTimeout, $TCPTimeout, $TCPRetryDelay, $TCPMaxRetries, $xTCPThreads)
+        $SettingBoxes = @($CSVBuffer, $SNMPTimeout, $TCPPortSet, $TCPTimeout, $TCPRetryDelay, $TCPMaxRetries, $xTCPThreads)
 
         # Registering handlers
         foreach ($Settingbox in $SettingBoxes) {
@@ -343,6 +352,7 @@ function Show-UserGUIXaml {
         # Save settings
         $script:CsvBufferSize = $CSVBuffer.Text
         $script:TimeoutMsUDP = $SNMPTimeout.Text
+        $script:TCPPort = $TCPPortSet.Text
         $script:TimeoutMsTCP = $TCPTimeout.Text
         $script:MaxRetries = $TCPMaxRetries.Text
         $script:RetryDelayMs = $TCPRetryDelay.Text
@@ -356,7 +366,4 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
-
 }
-
-
