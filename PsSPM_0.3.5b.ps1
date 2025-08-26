@@ -267,7 +267,6 @@ function Get-SnmpData {
             $vList,
             $TimeoutMsUDP
         )
-
         return [PSCustomObject]@{
             Success = $true
             result = $result.Data.ToString()
@@ -316,7 +315,6 @@ function Get-SnmpBulkWalkWithEncoding {
             $null,
             $null
         )
-
         foreach ($result in $vList) {
             $data = $result.Data
             $value = $null
@@ -380,8 +378,7 @@ function Get-PrinterData {
     try {
         # Get printer model to determine OIDs to use
         $model = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].Model -TimeoutMsUDP $TimeoutMsUDP
-        if (-not $model) {
-            Write-Log "Failed to get printer model $TargetHost" -Level "WARNING"
+        if (-not $model) { Write-Log "Failed to get printer model $TargetHost" -Level "WARNING"
             return $null
         }
 
@@ -389,15 +386,13 @@ function Get-PrinterData {
         Write-Log "Checking printer: $TargetHost - Online"
         
         $printername = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].PName -TimeoutMsUDP $TimeoutMsUDP
-        if (-not $printername) {
-            Write-Log "Failed to get printer name $TargetHost" -Level "WARNING"
+        if (-not $printername) { Write-Log "Failed to get printer name $TargetHost" -Level "WARNING"
             return $null
         }
 
         # Determine OID set based on model
         $Script:oidSet = Get-PrinterModelOIDSet -Model $model.result -OIDMapping $OidMapping
-        if (-not $oidSet) {
-            Write-Log "Not OID set for model: $($model.result)" -Level "WARNING"
+        if (-not $oidSet) { Write-Log "Not OID set for model: $($model.result)" -Level "WARNING"
             return $null
         }
 
@@ -411,20 +406,17 @@ function Get-PrinterData {
             
             if ($item.Value -is [string]) {
                 $Name = $item.Name
-                try {
-                    $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -TimeoutMsUDP $TimeoutMsUDP
+                try { $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -TimeoutMsUDP $TimeoutMsUDP
                     if ($value.Success -like 'true' ) { $results[$Name] = $Value.result } else { throw }
                 }
-                catch {
-                    Write-Log "Error Get-SnmpData for $Name : $($_.Exception.Message)" -Level "WARNING"
+                catch { Write-Log "Error Get-SnmpData for $Name : $($_.Exception.Message)" -Level "WARNING"
                     $results[$Name] = "Error"
                 }
             }
         }
         return $results
     }
-    catch {
-        Write-Log "Error Get-PrinterData for $TargetHost : $($_.Exception.Message)" -Level "ERROR"
+    catch { Write-Log "Error Get-PrinterData for $TargetHost : $($_.Exception.Message)" -Level "ERROR"
         return $null
     }
 }
@@ -529,39 +521,33 @@ try {
 
     # Load SharpSNMPLib.dll
     if ([System.Reflection.Assembly]::LoadFrom($DllPath)) { Write-Log "=== SharpSnmpLib: OK ===" }
-    else {
-        Write-Log "Failed to load Lextm.SharpSnmpLib" -Level "ERROR"
+    else { Write-Log "Failed to load Lextm.SharpSnmpLib" -Level "ERROR"
 		throw "Missing Lextm.SharpSnmpLib Assembly; is it installed?" | Out-Null
     }
 
     # Load printer OID
-    if (Test-Path $PrinterOIDPath) {
-        $oidMapping = Import-PowerShellDataFile $PrinterOIDPath
+    if (Test-Path $PrinterOIDPath) { $oidMapping = Import-PowerShellDataFile $PrinterOIDPath
         Write-Log "=== OID mapping: OK ==="
-    } else {
-        Write-Log "Printer OID file not found: $PrinterOIDPath" -Level "ERROR"
+    } else { Write-Log "Printer OID file not found: $PrinterOIDPath" -Level "ERROR"
         throw "Printer OID file not found: $PrinterOIDPath" | Out-Null
     }
 
     # Load GUI
-    if (Test-Path $ScriptGuiXaml) {
-        # File exists, dot source it
-        . $ScriptGuiXaml
-        Write-Log "=== GUI Xaml: OK ==="
-    } else { throw "GUI Xaml not load" | Out-Null }
-
-    # Load printer list
-    $PrinterRange = @()
     if ($ShowGUI) {
+        # Load printer list
+        $PrinterRange = @()
+
+        if (Test-Path $ScriptGuiXaml) { . $ScriptGuiXaml
+            Write-Log "=== GUI Xaml: OK ==="
+        } else { throw "GUI Xaml not load" | Out-Null }
+
         if ($selectedFile = Show-UserGUIXaml -Directory $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
-        else {
-            Write-Log "Printer list file not load" -Level "ERROR"
+        else { Write-Log "Printer list file not load" -Level "ERROR"
             throw "Printer list file not load" | Out-Null
         }
     } else {
         if ($selectedFile = Open-File $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
-        else {
-            Write-Log "Printer list file not load" -Level "ERROR"
+        else { Write-Log "Printer list file not load" -Level "ERROR"
             throw "Printer list file not load" | Out-Null
         }
     }
@@ -569,15 +555,13 @@ try {
     # Import from (range/txt/csv)
     if ($PrinterRange -notlike $null) { $printers = $PrinterRange }
     elseif ($printers = Import-Csv -Path $selectedFile -Header Value) { Write-Log "=== Import Printers IP: OK ===" }
-    else {
-        Write-Log "=== Import Printers IP: Error ===" -Level "ERROR"
+    else { Write-Log "=== Import Printers IP: Error ===" -Level "ERROR"
         throw "Import Printers IP: Error" | Out-Null
     }
 
     $totalPrinters = $printers.Value.Count
     
-    if ($totalPrinters -eq 0) {
-        Write-Log "No printers found in the list" -Level "ERROR"
+    if ($totalPrinters -eq 0) { Write-Log "No printers found in the list" -Level "ERROR"
         throw "No printers found in the list" | Out-Null
     }
 
@@ -710,8 +694,7 @@ try {
 #region Report Generation
     #HTML
     If($HtmlFileReport) {
-        if (Test-Path $HtmlHeader) {
-            . $HtmlHeader
+        if (Test-Path $HtmlHeader) { . $HtmlHeader
             Write-Log "=== Html Header: OK ==="
         } else { throw "Html Header not load" | Out-Null }
 
