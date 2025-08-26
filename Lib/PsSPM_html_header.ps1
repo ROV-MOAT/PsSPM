@@ -63,9 +63,9 @@ $Header = @"
         list-style-type: disclosure-closed;
         visibility: hidden;
         max-width: 400px;
-        width: max-content; /* Allows the tooltip to size based on content up to max-width */
-        white-space: normal; /* Ensures text wraps within the tooltip */
-        word-wrap: break-word; /* Prevents long words from overflowing */
+        width: max-content;
+        white-space: normal;
+        word-wrap: break-word;
         background-color: #6d8196;
         color: #ffffff;
         text-align: Left;
@@ -90,9 +90,9 @@ $Header = @"
     .container:hover .toner-high,
     .container:hover .toner-medium,
     .container:hover .toner-low {
-        background-color: #000000; /* Цвет фона */
-        border-radius: 4px; /* Закругление углов */
-        padding: 2px 3px 2px 3px; /* Отступы вокруг текста - верх, право, низ, лево */
+        background-color: #000000;
+        border-radius: 4px;
+        padding: 2px 3px 2px 3px;
         color: #ffffff;
     }
 </style>
