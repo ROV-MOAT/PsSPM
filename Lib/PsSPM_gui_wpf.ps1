@@ -16,7 +16,7 @@ $xaml = @'
             <ColumnDefinition Width="Auto"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="0" Grid.Row="0">
+        <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,5,0">
             <GroupBox Header="Report">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
                     <StackPanel Orientation="Horizontal">
@@ -79,7 +79,7 @@ $xaml = @'
             </Border>
         </GroupBox>
 
-        <GroupBox Grid.Column="0" Grid.Row="1" Header="Device pool">
+        <GroupBox Grid.Column="0" Grid.Row="1" Header="Device pool" Margin="0,0,5,0">
             <StackPanel>
                 <Label Content="Enter IP range:" Margin="0"/>
                 <StackPanel Name="IpStackPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
