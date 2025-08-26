@@ -7,9 +7,9 @@
     Checks printer status via SNMP and generates CSV, HTML report with toner levels, counters, and information
 
 .NOTES
-    Version: 0.3.5
+    Version: 0.3.5b
     Author: Oleg Ryabinin + AI
-    Date: 2025-08-22
+    Date: 2025-08-26
     
     MESSAGE:
     Powershell 5+
@@ -17,7 +17,7 @@
     CHANGELOG:
 
     Ver. 0.3.5b
-    Сode optimization
+    Optimization
     
     Ver. 0.3.4
     + WPF GUI
@@ -63,7 +63,7 @@
 [int]$CsvBufferSize = 20     # Number of lines in buffer to write to CSV file
 
 #LOG
-[bool]$WriteLog = $true   # On/Off Logging Function
+[bool]$WriteLog = $false   # On/Off Logging Function
 $LogDir = "$PSScriptRoot\Log"
 $LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 
@@ -107,7 +107,7 @@ function Write-Log {
 # Open File Dialog function
 function Open-File([string] $initialDirectory){
     Add-Type -AssemblyName System.Windows.Forms
-    $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+    $OpenFileDialog = [System.Windows.Forms.OpenFileDialog]::new()
     try {
         $OpenFileDialog.initialDirectory = $initialDirectory
         $OpenFileDialog.filter = "Text files (*.txt)|*.txt|CSV files (*.csv)|*.csv|All files (*.*)|*.*"
@@ -148,7 +148,7 @@ function Test-TcpConnectionParallel {
 
                 try {
                     # Create and configure the TcpClient
-                    $client = New-Object System.Net.Sockets.TcpClient
+                    $client = [System.Net.Sockets.TcpClient]::new()
                     $connectTask = $client.ConnectAsync($HostName, $Port)
                     
                     # Wait for the task with timeout
@@ -187,7 +187,6 @@ function Test-TcpConnectionParallel {
                 Exception = if ($lastException) { $_ } else { $null }
             }
         }
-
         Connect-TcpClient -HostName $Device -Port $Port -MaxRetries $MaxRetries -RetryDelayMs $RetryDelayMs -TimeoutMs $TimeoutMsTCP
     }
 
@@ -201,7 +200,6 @@ function Test-TcpConnectionParallel {
             Handle = $powershell.BeginInvoke()
             Device = $Device
         }
-        
         $runspaces += $runspaceHandle
     }
 
@@ -255,13 +253,13 @@ function Get-SnmpData {
         [int]$TimeoutMsUDP = 5000
     )
 
+    try {
         # Set up SNMP manager
         $IP = [System.Net.IPAddress]::Parse($Target)
         $endpoint = [System.Net.IPEndPoint]::new($IP, $UDPport)
         $vList = [System.Collections.Generic.List[Lextm.SharpSnmpLib.Variable]]::new()
         $null = $vList.Add([Lextm.SharpSnmpLib.Variable]::new([Lextm.SharpSnmpLib.ObjectIdentifier]::new($Oid)))
 
-    try {
         $result = [Lextm.SharpSnmpLib.Messaging.Messenger]::Get(
             [Lextm.SharpSnmpLib.VersionCode]::V2,
             $endpoint,
@@ -269,10 +267,17 @@ function Get-SnmpData {
             $vList,
             $TimeoutMsUDP
         )
-        return $result.Data.ToString()
+
+        return [PSCustomObject]@{
+            Success = $true
+            result = $result.Data.ToString()
+        }
     }
-    catch { Write-Log "SNMP query failed for $Target (OID: $Oid): $_" -Level "WARNING" 
-        return "Failed"
+    catch { Write-Log "SNMP query failed for $Target (OID: $Oid): $_" -Level "WARNING"
+        return [PSCustomObject]@{
+            Success = $false
+            result = $null
+        }
     }
 }
 
@@ -287,14 +292,16 @@ function Get-SnmpBulkWalkWithEncoding {
         [int]$UDPport = 161,
         [int]$TimeoutMsUDP = 5000
     )
+
+    $result_out = [System.Collections.Generic.List[PSObject]]::new()
+    $encodings = @([System.Text.Encoding]::UTF8, [System.Text.Encoding]::ASCII, [System.Text.Encoding]::GetEncoding(1251))
+
+    try {
         # Set up SNMP manager
         $IP = [System.Net.IPAddress]::Parse($Target)
         $endpoint = [System.Net.IPEndPoint]::new($IP, $UDPport)
         $vList = [System.Collections.Generic.List[Lextm.SharpSnmpLib.Variable]]::new()
-        $result_out = [System.Collections.Generic.List[PSObject]]::new()
-        $encodings = @([System.Text.Encoding]::UTF8, [System.Text.Encoding]::ASCII, [System.Text.Encoding]::GetEncoding(1251))
 
-    try {
         # Perform the walk
         $null = [Lextm.SharpSnmpLib.Messaging.Messenger]::BulkWalk(
             [Lextm.SharpSnmpLib.VersionCode]::V2,
@@ -326,7 +333,7 @@ function Get-SnmpBulkWalkWithEncoding {
         $cleanArray = $result_out.Where( {$_.Trim() -ne ""} )
         return $cleanArray
     }
-    catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "WARNING"; return $null }
+    catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "WARNING"; return "Error" }
 }
 
 function Get-PrinterModelOIDSet {
@@ -336,7 +343,6 @@ function Get-PrinterModelOIDSet {
         [Parameter(Mandatory=$true)]
         [hashtable]$OIDMapping
     )
-
     # More flexible model matching with wildcards
     $modelPatterns = @{
         "*333*" = "333"
@@ -355,37 +361,87 @@ function Get-PrinterModelOIDSet {
         "*332*" = "332"
     }
 
-    foreach ($pattern in $modelPatterns.Keys) { if ($Model -like $pattern) { return $OIDMapping[$modelPatterns[$pattern]] } }
+    foreach ($pattern in $modelPatterns.Keys) { if ($Model -like $pattern) {return $OIDMapping[$modelPatterns[$pattern]]} }
     return $OIDMapping["Default"]
 }
 
 function Get-PrinterData {
-    param ([string]$TargetHost)
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$TargetHost,
+        [Parameter(Mandatory=$true)]
+        [hashtable]$OidMapping,
+        [int]$TimeoutMsUDP = 2000,
+        [string]$CurrentPrinter = ""
+    )
 
     $results = [System.Collections.Generic.Dictionary[string, object]]::new()
 
-    # Get printer model to determine OIDs to use
-    $model = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].Model -TimeoutMsUDP $TimeoutMsUDP
-
-    Write-Host "$currentPrinter : $printerIP - $model" -ForegroundColor Green
-    Write-Log "Checking printer: $printerIP - Online"
-    $printername = Get-SnmpData -Target $printerIP -Oid $oidMapping["Default"].PName -TimeoutMsUDP $TimeoutMsUDP
-
-    # Determine OID set based on model
-    $Script:oidSet = Get-PrinterModelOIDSet -Model $model -OIDMapping $oidMapping
-
-    $results.Add('Model', $model)
-    $results.Add('PName', $printername)
-
-    foreach ($item in $oidSet.GetEnumerator()) {
-        if ($item.Name -like "Display" -or $item.Name -like "Status") { continue }
-        elseif ($item.Value -is [string]) {
-            $Name = $item.Name
-            $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -TimeoutMsUDP $TimeoutMsUDP
-            $results.Add($Name, $Value)
+    try {
+        # Get printer model to determine OIDs to use
+        $model = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].Model -TimeoutMsUDP $TimeoutMsUDP
+        if (-not $model) {
+            Write-Log "Failed to get printer model $TargetHost" -Level "WARNING"
+            return $null
         }
+
+        Write-Host "$CurrentPrinter : $TargetHost - $($model.result)" -ForegroundColor Green
+        Write-Log "Checking printer: $TargetHost - Online"
+        
+        $printername = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].PName -TimeoutMsUDP $TimeoutMsUDP
+        if (-not $printername) {
+            Write-Log "Failed to get printer name $TargetHost" -Level "WARNING"
+            return $null
+        }
+
+        # Determine OID set based on model
+        $Script:oidSet = Get-PrinterModelOIDSet -Model $model.result -OIDMapping $OidMapping
+        if (-not $oidSet) {
+            Write-Log "Not OID set for model: $($model.result)" -Level "WARNING"
+            return $null
+        }
+
+        # Safe add to dictionary
+        $results['Model'] = $model.result
+        $results['PName'] = $printername.result
+        $results['IPAddress'] = $TargetHost
+
+        foreach ($item in $oidSet.GetEnumerator()) {
+            if ($item.Name -in @("Display", "Status")) { continue }
+            
+            if ($item.Value -is [string]) {
+                $Name = $item.Name
+                try {
+                    $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -TimeoutMsUDP $TimeoutMsUDP
+                    if ($value.Success -like 'true' ) { $results[$Name] = $Value.result } else { throw }
+                }
+                catch {
+                    Write-Log "Error Get-SnmpData for $Name : $($_.Exception.Message)" -Level "WARNING"
+                    $results[$Name] = "Error"
+                }
+            }
+        }
+        return $results
     }
-    return $results
+    catch {
+        Write-Log "Error Get-PrinterData for $TargetHost : $($_.Exception.Message)" -Level "ERROR"
+        return $null
+    }
+}
+
+function Format-Value {
+    param(
+        [Parameter(Mandatory=$true)]
+        [AllowNull()]
+        [object]$Value,
+        [string]$Default = "Error"
+    )
+
+    if ($null -eq $Value -or $Value -eq "") { return $null }
+
+    if ($Value -like 'Error') { return "<center class='error'>$Default</center>" }
+
+    return "<center>$($Value.ToString())</center>"
 }
 
 function Get-TonerPercentage {
@@ -395,11 +451,63 @@ function Get-TonerPercentage {
         [Parameter(Mandatory=$true)]
         [object]$Current
     )
+
+    if ($Total -like 'Error' -or $Current -like 'Error') { return "Error" }
+    if ($null -eq $Total -or $null -eq $Current -or $Total -eq "" -or $Current -eq "") { return $null }
     
-    if ($Total -and $Total -notlike 'Failed' -and [int]$Total -gt 0) {
-        if ($Current -and $Current -notlike 'Failed' -and [int]$Current -gt 0) { return [math]::Round(([int]$Current / [int]$Total) * 100) }
-        elseif ($Total -like 'Failed' -or $Current -like 'Failed') { return "Failed" }
-        else { return 0 }
+    try {
+        $totalValue = [int]$Total
+        $currentValue = [int]$Current
+        
+        if ($totalValue -le 0 -or $currentValue -le 0) { return 0 }
+        
+        $percentage = [math]::Round(($currentValue / $totalValue) * 100)
+        return $percentage
+        
+    }
+    catch { return $null }
+}
+function Update-TonerLevels {
+    param([object]$PrinterData)
+
+    $TonerLevels =@{}
+    $cartridgeConfig = @{
+        'TK'  = @('TonerKTotal', 'TonerKCurrent')
+        'DKU' = @('DrumKUTotal', 'DrumKUCurrent')
+        'DK'  = @('DrumKTotal', 'DrumKCurrent')
+        'TC'  = @('TonerCTotal', 'TonerCCurrent')
+        'TM'  = @('TonerMTotal', 'TonerMCurrent')
+        'TY'  = @('TonerYTotal', 'TonerYCurrent')
+    }
+    
+    foreach ($key in $cartridgeConfig.Keys) {
+        $totalKey = $cartridgeConfig[$key][0]
+        $currentKey = $cartridgeConfig[$key][1]
+        
+        if ($PrinterData.ContainsKey($totalKey) -and $PrinterData.ContainsKey($currentKey)) {
+            $TonerLevels[$key] = Get-TonerPercentage -Total $PrinterData[$totalKey] -Current $PrinterData[$currentKey]
+        }
+    }
+    return $TonerLevels
+}
+
+function Format-TonerLevel {
+    param(
+        [Parameter(Mandatory=$true)]
+        [AllowNull()]
+        [object]$Level
+    )
+
+    if ($null -eq $Level -or $Level -like "") { return $null }
+    if ($Level -like 'Error') { return "<div class='container'><center><span class='error'>Error</span></center></div>" }
+
+    try { $tonerValue = [int]$Level } catch { return $null }
+
+    switch ($tonerValue) {
+        { $_ -gt 49 } { return "<div class='container'><center><span class='toner-high'>$Level%</span></center></div>" }
+        { $_ -gt 10 -and $_ -le 49 } { return "<div class='container'><center><span class='toner-medium'>$Level%</span></center></div>" }
+        { $_ -ge 0 -and $_ -le 10 } { return "<div class='container'><center><span class='toner-low'>$Level%</span></center></div>" }
+        default { return $null }
     }
 }
 
@@ -412,30 +520,6 @@ function Format-Status {
         default   { "error" }
     }
     return "<center><span class='$class'>$TcpStatus</span></center>"
-}
-
-function Format-Value {
-    param(
-        [Parameter(Mandatory=$true)]
-        [AllowNull()]
-        [object]$Value,
-        [string]$Default = "Error"
-    )
-    if ($Value -and $Value -notlike 'Failed') { return "<center>$Value</center>" } elseif ($Value -like 'Failed') { return "<center class='error'>$Default</center>" } else { return "" }
-}
-
-function Format-TonerLevel {
-    param(
-        [Parameter(Mandatory=$true)]
-        [AllowNull()]
-        [object]$Level
-    )
-
-    if ($Level -notlike 'Failed' -and [int]$Level -gt 49) { return "<div class='container'><center><span class='toner-high'>$Level%</span></center></div>" }
-    elseif ($Level -notlike 'Failed' -and [int]$Level -gt 10 -and [int]$Level -le 49) { return "<div class='container'><center><span class='toner-medium'>$Level%</span></center></div>" }
-    elseif ($Level -notlike 'Failed' -and $Level -notlike "" -and [int]$Level -le 10) { return "<div class='container'><center><span class='toner-low'>$Level%</span></center></div>" }
-    elseif ($Level -like 'Failed') { return "<div class='container'><center><span class='error'>Error</span></center></div>" }
-    else { return "" }
 }
 #endregion
 
@@ -525,17 +609,16 @@ try {
     ForEach ($currentPrinterIP in $CheckPrinters) {
         $currentPrinter++
         $printerIP = $currentPrinterIP.Device
-        $OnlineDevice = $currentPrinterIP.Connected
         $TcpStatus = $null
         $oidSet = $null
         $pdisplay = $null
         $pstatus = $null
         $PrinterData = $null
-        $tonerLevels = @{}
+        $tonerLevels = $null
 
         Write-Log "=== Checking printer: $currentPrinter of $totalPrinters ==="
         # Check printer availability(Ping)
-        if ($OnlineDevice -like 'false') {
+        if ($currentPrinterIP.Connected -like 'false') {
             $TcpStatus = "Offline"
             Write-Host "$currentPrinter : $printerIP - Offline" -ForegroundColor Red
             Write-Log "Checking printer: $printerIP - Offline"
@@ -543,17 +626,8 @@ try {
         else {
             try {
                 $TcpStatus = "Online"
-                $PrinterData = Get-PrinterData -Target $printerIP
-
-                if ($PrinterData.ContainsKey('TonerKTotal')) { $tonerLevels.TK = Get-TonerPercentage -Total $PrinterData.TonerKTotal -Current $PrinterData.TonerKCurrent }
-                if ($PrinterData.ContainsKey('DrumKUTotal')) { $tonerLevels.DKU = Get-TonerPercentage -Total $PrinterData.DrumKUTotal -Current $PrinterData.DrumKUCurrent }
-                if ($PrinterData.ContainsKey('DrumKTotal')) { $tonerLevels.DK = Get-TonerPercentage -Total $PrinterData.DrumKTotal -Current $PrinterData.DrumKCurrent }
-                
-                if ($PrinterData.ContainsKey('TonerCTotal')) {
-                    $tonerLevels.TC = Get-TonerPercentage -Total $PrinterData.TonerCTotal -Current $PrinterData.TonerCCurrent
-                    $tonerLevels.TM = Get-TonerPercentage -Total $PrinterData.TonerMTotal -Current $PrinterData.TonerMCurrent
-                    $tonerLevels.TY = Get-TonerPercentage -Total $PrinterData.TonerYTotal -Current $PrinterData.TonerYCurrent
-                }
+                $PrinterData = Get-PrinterData -Target $printerIP -TimeoutMsUDP $TimeoutMsUDP -OidMapping $OidMapping -CurrentPrinter $CurrentPrinter
+                $tonerLevels = Update-TonerLevels -PrinterData $PrinterData
 
                 # Get printer status values
                 if ($oidSet.Display) { $pdisplay = Get-SnmpBulkWalkWithEncoding -Target $printerIP -Oid $oidSet.Display -TimeoutMsUDP $TimeoutMsUDP }
@@ -566,11 +640,11 @@ try {
         }
 
         if($HtmlFileReport) {
-            $htmlD = foreach ($element in $pdisplay) { "<li>$element</li>" | Out-String -Stream }
-            $htmlOutputD = $htmlD -join ""
+            $htmlDisplay = foreach ($element in $pdisplay) { "<li>$element</li>" | Out-String -Stream }
+            $htmlOutputDisplay = $htmlDisplay -join ""
 
-            $htmlS = foreach ($element in $pstatus) { "<li>$element</li>" | Out-String -Stream }
-            $htmlOutputS = $htmlS -join ""
+            $htmlStatus = foreach ($element in $pstatus) { "<li>$element</li>" | Out-String -Stream }
+            $htmlOutputStatus = $htmlStatus -join ""
 
             # Add information to HTML report
             $null = $DataHtmlReport.Add([PSCustomObject]@{
@@ -588,8 +662,8 @@ try {
                 "<span style='color:#000000'>K</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TK
                 "<span style='color:#000000'>K</span> Drum"   = Format-TonerLevel -Level $tonerLevels.DKU
                 "<span style='color:#00FFFF'>C</span><span style='color:#FD3DB5'>M</span><span style='color:#FFDE21'>Y</span><span style='color:#000000'>K</span> DrumKit" = Format-TonerLevel -Level $tonerLevels.DK
-                "<span style='color:#FFDE21'>Display</span>" = if ($pdisplay.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputD</ul></div>" } else { "" }
-                "<span style='color:#FFDE21'>Active Alerts</span>" = if ($pstatus.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputS</ul></div>" } else { "" }
+                "<span style='color:#FFDE21'>Display</span>" = if ($pdisplay.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputDisplay</ul></div>" } else { "" }
+                "<span style='color:#FFDE21'>Active Alerts</span>" = if ($pstatus.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputStatus</ul></div>" } else { "" }
                 # Add other columns similarly
             })
         }
