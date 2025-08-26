@@ -95,7 +95,7 @@ $xaml = @'
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <Label Content="or select file:" Margin="0"/>
-                    <ComboBox x:Name="FileSelectComboBox" Margin="0" Width="130" Height="25" IsEditable="True"/>
+                    <ComboBox x:Name="FileSelectComboBox" Margin="0" Width="133" Height="25" IsEditable="True"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
@@ -390,4 +390,5 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
+
 }
