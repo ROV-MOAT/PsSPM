@@ -44,7 +44,7 @@ $xaml = @'
 
         <GroupBox Grid.Column="1" Grid.Row="0" Header="TCP Settings">
         <Border CornerRadius="5" BorderBrush="Gray" BorderThickness="0" Padding="0" Margin="0">
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,7,0">
                 <StackPanel Orientation="Horizontal">
                     <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
                         <Label Content="TCP Port:" DockPanel.Dock="Left" Margin="0"/>
@@ -99,8 +99,7 @@ $xaml = @'
                 </StackPanel>
             </StackPanel>
         </GroupBox>
-       
-        <Button x:Name="RunButton" Grid.Column="1" Grid.Row="1" Content="Run" Width="50" Height="30" Padding="5" Margin="5"/>
+        <Button x:Name="RunButton" Grid.Column="1" Grid.Row="1" Content="Run" Width="80" Height="30" Padding="5" Margin="5"/>
     </Grid>
 </Window>
 '@
@@ -390,5 +389,4 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
-
 }
