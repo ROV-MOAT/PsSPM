@@ -245,6 +245,30 @@ function Show-UserGUIXaml {
             })
 
             $Settingbox.Add_PreviewTextInput($TextBoxDigInputHandler)
+
+            $Settingbox.Add_TextChanged({
+                param($sender, $e)
+    
+                # Check only for filled fields
+                if ($sender.Text -match '^\d+$') {
+                    $value = [int]$sender.Text
+                
+                    # For the first octet
+                    if ($sender.Text -ne "" -and $sender.Name -eq "TCPPortSet") {
+                        if ($value -lt 1 -or $value -gt 65535) {
+                            [System.Windows.MessageBox]::Show("The Port must be not 0 and ≤ 65535", "Error")
+                            $sender.Text = ""
+                            $sender.Focus()
+                            return
+                        }
+                    } elseif ($value -gt 99999) {
+                        [System.Windows.MessageBox]::Show("Value must be ≤ 99999", "Error")
+                        $sender.Text = ""
+                        $sender.Focus()
+                        return
+                    }
+                }            
+            })
         }
 
         # All TextBox for octets
@@ -261,7 +285,7 @@ function Show-UserGUIXaml {
                 # Checking format and values
                 if ($clipboardText -match '^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$') {
                     $octets = $clipboardText.Split('.')
-            
+
                     # Validate first octet (≤223)
                     if ([int]$octets[0] -lt 1 -or [int]$octets[0] -gt 223) {
                         [System.Windows.MessageBox]::Show("The first octet must be not 0 and ≤ 223", "Error")
@@ -301,7 +325,7 @@ function Show-UserGUIXaml {
             # Check only for filled fields
             if ($sender.Text -match '^\d+$') {
                 $value = [int]$sender.Text
-        
+                
                 # For the first octet
                 if ($sender.Text -ne "" -and $sender.Name -eq "Octet1") {
                     if ($value -lt 1 -or $value -gt 223) {
