@@ -20,17 +20,19 @@ $xaml = @'
             <GroupBox Header="Report">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
                     <StackPanel Orientation="Horizontal">
-                        <CheckBox x:Name="HtmlCheckBox" Content="HTML" Margin="10"/>
-                        <CheckBox x:Name="CsvCheckBox" Content="CSV" Margin="10"/>
-                        <CheckBox x:Name="LogCheckBox" Content="Log" Margin="10"/>
+                        <CheckBox x:Name="HtmlCheckBox" Content="HTML" Margin="5"/>
+                        <CheckBox x:Name="CsvCheckBox" Content="CSV" Margin="5"/>
+                        <CheckBox x:Name="LogCheckBox" Content="Log" Margin="5"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                        <Label Content="CSV buffer (line):" Margin="0"/>
-                        <TextBox x:Name="CSVBuffer" TextAlignment="Center" HorizontalAlignment="Left" MaxLength="4" Width="45" Height="20" Margin="0"/>
+                        <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="163">
+                            <Label Content="CSV buffer (line):" DockPanel.Dock="Left" Margin="0"/>
+                            <TextBox x:Name="CSVBuffer" TextAlignment="Center" DockPanel.Dock="Right" HorizontalAlignment="Left" MaxLength="4" Width="45" Height="20" Margin="0"/>
+                        </DockPanel>
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Header="SNMP Settings" Margin="0,20,0,0">
+            <GroupBox Header="SNMP Settings" Margin="0,30,0,0">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
                     <StackPanel Orientation="Horizontal">
                         <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
@@ -44,7 +46,7 @@ $xaml = @'
 
         <GroupBox Grid.Column="1" Grid.Row="0" Header="TCP Settings">
         <Border CornerRadius="5" BorderBrush="Gray" BorderThickness="0" Padding="0" Margin="0">
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,7,0">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0,0,7,3">
                 <StackPanel Orientation="Horizontal">
                     <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
                         <Label Content="TCP Port:" DockPanel.Dock="Left" Margin="0"/>
@@ -99,6 +101,7 @@ $xaml = @'
                 </StackPanel>
             </StackPanel>
         </GroupBox>
+
         <Button x:Name="RunButton" Grid.Column="1" Grid.Row="1" Content="Run" Width="80" Height="30" Padding="5" Margin="5"/>
     </Grid>
 </Window>
