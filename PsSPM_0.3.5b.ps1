@@ -9,7 +9,7 @@
 .NOTES
     Version: 0.3.5b
     Author: Oleg Ryabinin + AI
-    Date: 2025-08-26
+    Date: 2025-08-27
     
     MESSAGE:
     Powershell 5+
@@ -17,6 +17,8 @@
     CHANGELOG:
 
     Ver. 0.3.5b
+    + Mail send
+    + Interface Mode (Console, FullGui, LightGui)
     Optimization
     
     Ver. 0.3.4
@@ -53,7 +55,13 @@
     C# SNMP Library - https://github.com/lextudio/sharpsnmplib
     Download C# SNMP Library - https://www.nuget.org/packages/Lextm.SharpSnmpLib/
 #>
-[bool]$ShowGUI = $true
+param(
+    [ValidateSet("Console", "FullGui", "LightGui")]
+    [string]$InterfaceMode = "FullGui",
+    [string]$ConsoleFile = $PSScriptRoot
+)
+
+#[bool]$ShowGUI = $true
 [string]$Version = "0.3.5b"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
@@ -64,8 +72,8 @@
 
 #LOG
 [bool]$WriteLog = $false   # On/Off Logging Function
-$LogDir = "$PSScriptRoot\Log"
-$LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
+[string]$LogDir = "$PSScriptRoot\Log"
+[string]$LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 
 #SNMP
 [int]$TimeoutMsUDP = 5000  # Timeout SNMP - Milliseconds (1 sec. = 1000 ms) / 0 = infinity
@@ -77,14 +85,27 @@ $LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 [int]$RetryDelayMs = 2000  # Milliseconds (1 sec. = 1000 ms)
 [int]$TCPThreads = 10      # Ьaximum number of running TCP threads
 
+# Mail
+[bool]$MailSend = $false
+[string]$MailFrom = "sender@example.com"
+[string[]]$MailTo = "recipient@example.com"
+[string]$Subject = "PsSPM Report"
+[string[]]$CC   # Carbon copy
+[string[]]$BCC  # Blind carbon copy
+[string]$SmtpServer = "smtp.example.com"
+[int]$SmtpPort = 25
+[int]$SmtpTimeoutMs = 10000 # Timeout Smtp - Milliseconds (1 sec. = 1000 ms)
+
 #Path
-$PrinterOIDPath = "$PSScriptRoot\Lib\PsSPM_oid.psd1"
-$ScriptGuiXaml = "$PSScriptRoot\Lib\PsSPM_gui_wpf.ps1"
-$HtmlHeader = "$PSScriptRoot\Lib\PsSPM_html_header.ps1"
-$PrinterListPath = "$PSScriptRoot\IP"
-$ReportDir ="$PSScriptRoot\Report"
-$DllPath = "$PSScriptRoot\Lib\SharpSnmpLib.dll"
-$selectedFile = $null
+[string]$PrinterOIDPath = "$PSScriptRoot\Lib\PsSPM_oid.psd1"
+[string]$ScriptGuiXaml = "$PSScriptRoot\Lib\PsSPM_gui_wpf.ps1"
+[string]$HtmlHeader = "$PSScriptRoot\Lib\PsSPM_html.ps1"
+[string]$PrinterListPath = "$PSScriptRoot\IP"
+[string]$ReportDir ="$PSScriptRoot\Report"
+[string]$DllPath = "$PSScriptRoot\Lib\SharpSnmpLib.dll"
+[string]$selectedFile = $null
+[string]$filenamecsv = $null
+[string]$filenamehtml = $null
 
 #region Helper Functions
 if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir | Out-Null }
@@ -455,7 +476,6 @@ function Get-TonerPercentage {
         
         $percentage = [math]::Round(($currentValue / $totalValue) * 100)
         return $percentage
-        
     }
     catch { return $null }
 }
@@ -513,6 +533,92 @@ function Format-Status {
     }
     return "<center><span class='$class'>$TcpStatus</span></center>"
 }
+
+function Send-Mail {
+    param(
+        [string]$MailFrom = "sender@example.com",
+        [string[]]$MailTo = "recipient@example.com",
+        [string]$Subject = "Report",
+        [string]$Body = "Report", # If not set HTML Body
+        [bool]$IsBodyHtml = $false,
+        [string[]]$Attachments,
+        [string[]]$CC,  # Carbon copy
+        [string[]]$BCC, # Blind carbon copy
+        [string]$SmtpServer = "smtp.example.com",
+        [int]$SmtpPort = 25,
+        [bool]$EnableSsl = $false,
+        [bool]$UseDefaultCredentials = $true
+    )
+
+    $mail = $null
+    $smtpClient = $null
+
+    try {
+        Write-Host "Trying to send a letter via $SmtpServer`:$SmtpPort..." -ForegroundColor Yellow
+        
+        $mail = [System.Net.Mail.MailMessage]::new()
+        $mail.From = $MailFrom
+        
+        # Adding recipients
+        foreach ($recipient in $MailTo) { $mail.To.Add($recipient) }
+        
+        # Adding copies
+        if ($CC) { foreach ($ccRecipient in $CC) { $mail.CC.Add($ccRecipient) } }
+        
+        # Adding hidden copies
+        if ($BCC) { foreach ($bccRecipient in $BCC) { $mail.Bcc.Add($bccRecipient) } }
+        
+        $mail.Subject = $Subject
+        $mail.Body = $Body
+        $mail.IsBodyHtml = $IsBodyHtml
+
+        # Adding attachments
+        if ($Attachments) {
+            foreach ($attachmentPath in $Attachments) {
+                if ($null -eq $attachmentPath -or $attachmentPath -like "") { continue }
+
+                if (Test-Path $attachmentPath) {
+                    $attachment = [System.Net.Mail.Attachment]::new($attachmentPath)
+                    $mail.Attachments.Add($attachment)
+                    Write-Host "Attachment added: $attachmentPath" -ForegroundColor Gray
+                } else { Write-Warning "File not found: $attachmentPath" }
+            }
+        }
+
+        # Setting up an SMTP client
+        $smtpClient = [System.Net.Mail.SmtpClient]::new($SmtpServer, $SmtpPort)
+        $smtpClient.EnableSsl = $EnableSsl
+        $smtpClient.UseDefaultCredentials = $UseDefaultCredentials
+        
+        # Timeout
+        $smtpClient.Timeout = $SmtpTimeoutMs # Timeout Smtp - Milliseconds (1 sec. = 1000 ms)
+
+        # Send email
+        $smtpClient.Send($mail)
+        
+        Write-Host "The letter has been sent successfully!" -ForegroundColor Green
+        Write-Host "From: $MailFrom" -ForegroundColor Gray
+        Write-Host "To: $($MailTo -join ', ')" -ForegroundColor Gray
+        Write-Host "Subject: $Subject" -ForegroundColor Gray
+        
+        return
+    }
+    catch {
+        Write-Error "Mail - Error sending email: $($_.Exception.Message)"
+        if ($_.Exception.InnerException) { Write-Error "Mail - Internal error: $($_.Exception.InnerException.Message)" }
+        return
+    }
+    finally {
+        if ($mail) { 
+            $mail.Dispose() 
+            Write-Host "Letter resources freed" -ForegroundColor DarkGray
+        }
+        if ($smtpClient) { 
+            $smtpClient.Dispose() 
+            Write-Host "SMTP client resources have been released" -ForegroundColor DarkGray
+        }
+    }
+}
 #endregion
 
 #region Initialization
@@ -532,26 +638,34 @@ try {
         throw "Printer OID file not found: $PrinterOIDPath" | Out-Null
     }
 
-    # Load GUI
-    if ($ShowGUI) {
-        # Load printer list
-        $PrinterRange = @()
-
-        if (Test-Path $ScriptGuiXaml) { . $ScriptGuiXaml
-            Write-Log "=== GUI Xaml: OK ==="
-        } else { throw "GUI Xaml not load" | Out-Null }
-
-        if ($selectedFile = Show-UserGUIXaml -Directory $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
-        else { Write-Log "Printer list file not load" -Level "ERROR"
-            throw "Printer list file not load" | Out-Null
+    # Interface Mode
+    switch ($InterfaceMode) {
+        "Console" {
+            if (Test-Path $ConsoleFile) { $selectedFile = $ConsoleFile
+                Write-Log "=== Printer list: OK ==="
+            } else { Write-Log "Printer list file not load" -Level "ERROR"
+                throw "Printer list file not load" | Out-Null
+            }
         }
-    } else {
-        if ($selectedFile = Open-File $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
-        else { Write-Log "Printer list file not load" -Level "ERROR"
-            throw "Printer list file not load" | Out-Null
+        "FullGui" {
+            $PrinterRange = @()
+            if (Test-Path $ScriptGuiXaml) { . $ScriptGuiXaml
+                Write-Log "=== GUI Xaml: OK ==="
+            } else { throw "GUI Xaml not load" | Out-Null }
+
+            if ($selectedFile = Show-UserGUIXaml -Directory $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
+                else { Write-Log "Printer list file not load" -Level "ERROR"
+                throw "Printer list file not load" | Out-Null
+            }
+        }
+        "LightGui" {
+            if ($selectedFile = Open-File $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
+                else { Write-Log "Printer list file not load" -Level "ERROR"
+                throw "Printer list file not load" | Out-Null
+            }
         }
     }
-    
+
     # Import from (range/txt/csv)
     if ($PrinterRange -notlike $null) { $printers = $PrinterRange }
     elseif ($printers = Import-Csv -Path $selectedFile -Header Value) { Write-Log "=== Import Printers IP: OK ===" }
@@ -692,7 +806,7 @@ try {
 #endregion
 
 #region Report Generation
-    #HTML
+    # HTML
     If($HtmlFileReport) {
         if (Test-Path $HtmlHeader) { . $HtmlHeader
             Write-Log "=== Html Header: OK ==="
@@ -716,18 +830,23 @@ try {
         if (Test-Path $filenamehtml) {
             $DataHtmlReport.Clear()
             Write-Log "Report generated: $filenamehtml"
-            Start-Process $filenamehtml
+            if (-not $MailSend) { Start-Process $filenamehtml }
         }
         else { Write-Log "Failed to generate HTML report" -Level "ERROR" }
     }
     
-    #CSV
+    # CSV
     if($CsvFileReport) {
         if (Test-Path $filenamecsv) {
             Write-Log "Report generated: $filenamecsv"
-            Start-Process $filenamecsv
+            if (-not $MailSend) { Start-Process $filenamecsv }
         }
         else { Write-Log "Failed to generate CSV report" -Level "ERROR" }
+    }
+    
+    # Mail
+    if ($MailSend) {
+        Send-Mail -MailFrom $MailFrom -MailTo @($MailTo) -Subject $Subject -Attachments @($filenamehtml, $filenamecsv) -Body $MailHtmlBody -IsBodyHtml $true -SmtpServer $SmtpServer -SmtpPort $SmtpPort
     }
 }
 catch {
