@@ -99,7 +99,7 @@ $Header = @"
 "@
 
 $MailHtmlBody = @"
-<span><font color="black">Отчет PsSPM</font></span>
-<p>Дата: $(Get-Date)</p>
+<span><font color="black">PsSPM report</font></span>
+<p>Date: $(Get-Date)</p>
 "@
 #endregion
