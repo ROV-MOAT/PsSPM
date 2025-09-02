@@ -9,4 +9,7 @@ Interface Mode - Console, FullGui, LightGui.
 
 You can query any printer, you need to change/add the model and OID in the file "Lib\PsSPM_oid.psd1", and change/add the value "$modelPatterns" in the function "Get-PrinterModelOIDSet".
 
-Example for console - "C:\0.3.5\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile C:\0.3.5\IP\ *.txt", other modes have GUI.
+Example for console - powershell.exe -Command "& {D:\PsSPM_0.3.5b\PsSPM_0.3.5b.ps1 -InterfaceMode "Console" -ConsoleFile "D:\PsSPM_0.3.5b\IP\*.txt" -MailSend $true}", other modes have GUI.
+Sending a letter is convenient to use in Console mode, there are no mail settings in the GUI.
+
+Be careful not to store your account password in a script.
