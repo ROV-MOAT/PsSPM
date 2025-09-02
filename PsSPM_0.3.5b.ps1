@@ -488,7 +488,6 @@ try {
                 "<span style='color:#FD3DB5'>M</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TM
                 "<span style='color:#FFDE21'>Y</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TY
                 "<span style='color:#000000'>K</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TK
-                #"<span style='color:#000000'>K</span> Drum"   = Format-TonerLevel -Level $tonerLevels.DKU
                 "<span style='color:#00FFFF'>C</span><span style='color:#FD3DB5'>M</span><span style='color:#FFDE21'>Y</span><span style='color:#000000'>K</span> DrumKit" = "$(Format-TonerLevel -Level $tonerLevels.DC) $(Format-TonerLevel -Level $tonerLevels.DM) $(Format-TonerLevel -Level $tonerLevels.DY) $(Format-TonerLevel -Level $tonerLevels.DKU) $(Format-TonerLevel -Level $tonerLevels.DK)" #Format-TonerLevel -Level $tonerLevels.DK
                 "<span style='color:#FFDE21'>Display</span>" = if ($pdisplay.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputDisplay</ul></div>" } else { "" }
                 "<span style='color:#FFDE21'>Active Alerts</span>" = if ($pstatus.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputStatus</ul></div>" } else { "" }
@@ -589,3 +588,4 @@ finally {
 }
 
 #endregion
+
