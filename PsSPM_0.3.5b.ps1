@@ -511,8 +511,7 @@ try {
                 "M Toner %" = $tonerLevels.TM
                 "Y Toner %" = $tonerLevels.TY
                 "K Toner %" = $tonerLevels.TK
-                "K Drum %"  = $tonerLevels.DKU
-                "CMYK DrumKit %" = $tonerLevels.DK
+                "CMYK DrumKit %" = "$($tonerLevels.DC) $($tonerLevels.DM) $($tonerLevels.DY) $($tonerLevels.DKU) $($tonerLevels.DK)"
                 "Display" = if ($pdisplay.Length -ne 0) { "$pdisplay" } else { "" }
                 "Active Alerts" = if ($pstatus.Length -ne 0) { "$pstatus" } else { "" }
                 # Add other columns similarly
@@ -588,4 +587,5 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+
 #endregion
