@@ -94,13 +94,11 @@ $Header = @"
     .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     .tooltiptext:hover { background-color: #000000; }
 
-    .container { border-radius: 3px; padding: 5px; margin: 0; text-align: center; }
+    .container { border-radius: 3px; padding: 5px; margin: 0; text-align: center; transition: all 0.3s ease; }
+    .container:hover { background-color: #000000; background-size: cover; }
     .container:hover .toner-high,
     .container:hover .toner-medium,
     .container:hover .toner-low {
-        background-color: #000000;
-        border-radius: 4px;
-        padding: 2px 3px 2px 3px;
         color: #ffffff;
     }
 </style>
