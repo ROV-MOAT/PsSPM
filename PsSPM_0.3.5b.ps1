@@ -72,15 +72,18 @@ param(
 
 #LOG
 [bool]$WriteLog = $false   # On/Off Logging Function
+[bool]$ShowLog = $true   # On/Off console output
 [string]$LogDir = "$PSScriptRoot\Log"
 [string]$LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 
 #SNMP
 [int]$SnmpTimeoutMs = 5000  # Timeout SNMP - Milliseconds (1 sec. = 1000 ms) / 0 = infinity
+[int]$SnmpMaxAttempts = 3   # Retry Count
+[int]$SnmpDelayMs = 2000    # Milliseconds (1 sec. = 1000 ms)
 
 #TCP
 [int]$TCPPort = 80         # TCP port for check link
-[int]$TcpTimeoutMs = 500   # Timeout TcpClient - Milliseconds (1 sec. = 1000 ms)
+[int]$TcpTimeoutMs = 1000   # Timeout TcpClient - Milliseconds (1 sec. = 1000 ms)
 [int]$MaxRetries   = 3     # Retry Count
 [int]$RetryDelayMs = 2000  # Milliseconds (1 sec. = 1000 ms)
 [int]$TCPThreads = 10      # Ьaximum number of running TCP threads
@@ -118,10 +121,15 @@ if (-not (Test-Path $ReportDir)) { New-Item -ItemType Directory -Path $ReportDir
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
 
+    $logMessage = "$timestamp [$Level] - $Message"
+    
     if ($WriteLog) {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        $logMessage = "$timestamp [$Level] - $Message"
+
         Add-Content -Path $LogFile -Value $logMessage -Encoding UTF8
+        
+    }
+    if ($ShowLog) {
         if ($Level -eq "ERROR") { Write-Host $logMessage -ForegroundColor Red }
         elseif ($Level -eq "WARNING") { Write-Host $logMessage -ForegroundColor Yellow }
         else { Write-Host $logMessage -ForegroundColor Green }
@@ -180,7 +188,9 @@ function Get-PrinterData {
         [string]$TargetHost,
         [Parameter(Mandatory=$true)]
         [hashtable]$OidMapping,
-        [int]$SnmpTimeoutMs = 2000,
+        [int]$SnmpTimeoutMs = 5000,
+        [int]$SnmpMaxAttempts = 3,
+        [int]$SnmpDelayMs = 2000,
         [string]$CurrentPrinter = ""
     )
 
@@ -188,15 +198,14 @@ function Get-PrinterData {
 
     try {
         # Get printer model to determine OIDs to use
-        $model = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].Model -SnmpTimeoutMs $SnmpTimeoutMs
+        $model = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].Model -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs
         if (-not $model) { Write-Log "Failed to get printer model $TargetHost" -Level "WARNING"
             return $null
         }
 
-        Write-Host "$CurrentPrinter : $TargetHost - $($model.result)" -ForegroundColor Green
-        Write-Log "Checking printer: $TargetHost - Online"
+        Write-Log "$CurrentPrinter : $TargetHost - $($model.result)"
         
-        $printername = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].PName -SnmpTimeoutMs $SnmpTimeoutMs
+        $printername = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].PName -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs
         if (-not $printername) { Write-Log "Failed to get printer name $TargetHost" -Level "WARNING"
             return $null
         }
@@ -217,7 +226,7 @@ function Get-PrinterData {
             
             if ($item.Value -is [string]) {
                 $Name = $item.Name
-                try { $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -SnmpTimeoutMs $SnmpTimeoutMs
+                try { $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs
                     if ($value.Success -like 'true' ) { $results[$Name] = $Value.result } else { throw }
                 }
                 catch { Write-Log "Error Get-SnmpData for $Name : $($_.Exception.Message)" -Level "WARNING"
@@ -305,14 +314,14 @@ function Format-TonerLevel {
     )
 
     if ($null -eq $Level -or $Level -like "") { return $null }
-    if ($Level -like 'Error') { return "<div class='container'><center><span class='error'>Error</span></center></div>" }
+    if ($Level -like 'Error') { return "<span class='error'>Error</span>" }
 
     try { $tonerValue = [int]$Level } catch { return $null }
 
     switch ($tonerValue) {
-        { $_ -gt 49 } { return "<div class='container'><center><span class='toner-high'>$Level%</span></center></div>" }
-        { $_ -gt 10 -and $_ -le 49 } { return "<div class='container'><center><span class='toner-medium'>$Level%</span></center></div>" }
-        { $_ -ge 0 -and $_ -le 10 } { return "<div class='container'><center><span class='toner-low'>$Level%</span></center></div>" }
+        { $_ -gt 49 } { return "<span class='toner-high'>$Level%</span>" }
+        { $_ -gt 10 -and $_ -le 49 } { return "<span class='toner-medium'>$Level%</span>" }
+        { $_ -ge 0 -and $_ -le 10 } { return "<span class='toner-low'>$Level%</span>" }
         default { return $null }
     }
 }
@@ -448,13 +457,12 @@ try {
         # Check printer availability(Ping)
         if ($currentPrinterIP.Connected -like 'false') {
             $TcpStatus = "Offline"
-            Write-Host "$currentPrinter : $printerIP - Offline" -ForegroundColor Red
-            Write-Log "Checking printer: $printerIP - Offline"
+            Write-Log "$currentPrinter : $printerIP - Offline" -Level "ERROR"
         }
         else {
             try {
                 $TcpStatus = "Online"
-                $PrinterData = Get-PrinterData -Target $printerIP -SnmpTimeoutMs $SnmpTimeoutMs -OidMapping $OidMapping -CurrentPrinter $CurrentPrinter
+                $PrinterData = Get-PrinterData -Target $printerIP -OidMapping $OidMapping -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs -CurrentPrinter $CurrentPrinter
                 $tonerLevels = Update-TonerLevels -PrinterData $PrinterData
 
                 # Get printer status values
@@ -484,11 +492,11 @@ try {
                 "<span>Black</span>" = Format-Value -Value $PrinterData.BlackCount
                 "<span>Color</span>" = Format-Value -Value $PrinterData.ColorCount
                 "<span>Total</span>" = Format-Value -Value $PrinterData.TotalCount
-                "<span style='color:#00FFFF'>C</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TC
-                "<span style='color:#FD3DB5'>M</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TM
-                "<span style='color:#FFDE21'>Y</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TY
-                "<span style='color:#000000'>K</span> Toner"  = Format-TonerLevel -Level $tonerLevels.TK
-                "<span style='color:#00FFFF'>C</span><span style='color:#FD3DB5'>M</span><span style='color:#FFDE21'>Y</span><span style='color:#000000'>K</span> DrumKit" = "$(Format-TonerLevel -Level $tonerLevels.DC) $(Format-TonerLevel -Level $tonerLevels.DM) $(Format-TonerLevel -Level $tonerLevels.DY) $(Format-TonerLevel -Level $tonerLevels.DKU) $(Format-TonerLevel -Level $tonerLevels.DK)" #Format-TonerLevel -Level $tonerLevels.DK
+                "<span style='color:#00FFFF'>C</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TC)</span>"
+                "<span style='color:#FD3DB5'>M</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TM)</span>"
+                "<span style='color:#FFDE21'>Y</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TY)</span>"
+                "<span style='color:#000000'>K</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TK)</span>"
+                "<span style='color:#00FFFF'>C</span><span style='color:#FD3DB5'>M</span><span style='color:#FFDE21'>Y</span><span style='color:#000000'>K</span> DrumKit" = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.DC) $(Format-TonerLevel -Level $tonerLevels.DM) $(Format-TonerLevel -Level $tonerLevels.DY) $(Format-TonerLevel -Level $tonerLevels.DKU) $(Format-TonerLevel -Level $tonerLevels.DK)</span>"
                 "<span style='color:#FFDE21'>Display</span>" = if ($pdisplay.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputDisplay</ul></div>" } else { "" }
                 "<span style='color:#FFDE21'>Active Alerts</span>" = if ($pstatus.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputStatus</ul></div>" } else { "" }
                 # Add other columns similarly
@@ -586,6 +594,4 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
-
 #endregion
-
