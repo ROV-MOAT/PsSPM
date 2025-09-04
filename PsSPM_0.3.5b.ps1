@@ -75,8 +75,8 @@ param(
 #LOG
 [bool]$WriteLog = $false   # On/Off Logging Function
 [bool]$ShowLog = $true   # On/Off console output
-[string]$LogDir = "$PSScriptRoot\Log"
-[string]$LogFile = "$logDir\PrinterMonitor_$(Get-Date -Format 'yyyyMMddHHmmss').log"
+[string]$LogDir = "$PSScriptRoot\log"
+[string]$LogFile = "$logDir\PsSPM_log_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 
 #SNMP
 [int]$SnmpTimeoutMs = 5000  # Timeout SNMP - Milliseconds (1 sec. = 1000 ms) / 0 = infinity
@@ -102,15 +102,15 @@ param(
 [int]$SmtpTimeoutMs = 10000
 
 #Path
-[string]$PrinterOIDPath = "$PSScriptRoot\Lib\PsSPM_oid.psd1"
-[string]$ScriptGuiXaml = "$PSScriptRoot\Lib\PsSPM_wpf.ps1"
-[string]$HtmlHeader = "$PSScriptRoot\Lib\PsSPM_html.ps1"
-[string]$MailPath = "$PSScriptRoot\Lib\PsSPM_mail.ps1"
-[string]$TcpPath = "$PSScriptRoot\Lib\PsSPM_tcp.ps1"
-[string]$SnmpPath = "$PSScriptRoot\Lib\PsSPM_snmp.ps1"
-[string]$PrinterListPath = "$PSScriptRoot\IP"
-[string]$ReportDir ="$PSScriptRoot\Report"
-[string]$DllPath = "$PSScriptRoot\Lib\SharpSnmpLib.dll"
+[string]$PrinterOIDPath = "$PSScriptRoot\lib\PsSPM_oid.psd1"
+[string]$ScriptGuiXaml = "$PSScriptRoot\lib\PsSPM_wpf.ps1"
+[string]$HtmlHeader = "$PSScriptRoot\lib\PsSPM_html.ps1"
+[string]$MailPath = "$PSScriptRoot\lib\PsSPM_mail.ps1"
+[string]$TcpPath = "$PSScriptRoot\lib\PsSPM_tcp.ps1"
+[string]$SnmpPath = "$PSScriptRoot\lib\PsSPM_snmp.ps1"
+[string]$PrinterListPath = "$PSScriptRoot\ip"
+[string]$ReportDir ="$PSScriptRoot\report"
+[string]$DllPath = "$PSScriptRoot\lib\SharpSnmpLib.dll"
 [string]$selectedFile = $null
 [string]$filenamecsv = $null
 [string]$filenamehtml = $null
@@ -178,6 +178,8 @@ function Get-PrinterModelOIDSet {
         "*C60*" = "C60"
         "*533*" = "B60" # Same as B60
         "*622*" = "622"
+        "*M42*" = "M42"
+        "*M25*" = "M25"
     }
 
     foreach ($pattern in $modelPatterns.Keys) { if ($Model -like $pattern) {return $OIDMapping[$modelPatterns[$pattern]]} }
@@ -422,13 +424,13 @@ try {
     $DataCsvReport = [System.Collections.Generic.List[PSObject]]::new($CsvBufferSize)
     if($CsvFileReport) {
         if ($PrinterRange.Value.Count -gt 0) {
-            $filenamecsv = "$ReportDir\Printers_report_$($PrinterRange[0].Value)-$(Get-Date -Format 'yyyyMMddHHmmss').csv"
+            $filenamecsv = "$ReportDir\PsSPM_report_$($PrinterRange[0].Value)-$(Get-Date -Format 'yyyyMMddHHmmss').csv"
             $DataCsvReport | Export-Csv -Path $filenamecsv -NoTypeInformation -Encoding UTF8 -Delimiter ';'
         }
         else {
             $filePrefixcsv = Split-Path -Path $selectedFile -Leaf
             $filePrefixcsv = $filePrefixcsv -replace '.txt', '' -replace '.csv', ''
-            $filenamecsv = "$ReportDir\Printers_report_$filePrefixcsv-$(Get-Date -Format 'yyyyMMddHHmmss').csv"
+            $filenamecsv = "$ReportDir\PsSPM_report_$filePrefixcsv-$(Get-Date -Format 'yyyyMMddHHmmss').csv"
             $DataCsvReport | Export-Csv -Path $filenamecsv -NoTypeInformation -Encoding UTF8 -Delimiter ';'
         }
     }
@@ -558,13 +560,13 @@ try {
         $htmlContent = $htmlContent -replace '&lt;', '<' -replace '&#39;', "'" -replace '&gt;', '>'
 
         if ($PrinterRange.Value.Count -gt 0) {
-            $filenamehtml = "$ReportDir\Printers_report_$($PrinterRange[0].Value)-$(Get-Date -Format 'yyyyMMddHHmmss').html"
+            $filenamehtml = "$ReportDir\PsSPM_report_$($PrinterRange[0].Value)-$(Get-Date -Format 'yyyyMMddHHmmss').html"
             $htmlContent | Set-Content -Path $filenamehtml -Force -Encoding UTF8
         }
         else {  
             $filePrefixhtml = Split-Path -Path $selectedFile -Leaf
             $filePrefixhtml = $filePrefixhtml -replace '.txt', '' -replace '.csv', ''
-            $filenamehtml = "$ReportDir\Printers_report_$filePrefixhtml-$(Get-Date -Format 'yyyyMMddHHmmss').html"
+            $filenamehtml = "$ReportDir\PsSPM_report_$filePrefixhtml-$(Get-Date -Format 'yyyyMMddHHmmss').html"
             $htmlContent | Set-Content -Path $filenamehtml -Force -Encoding UTF8
         }
 
