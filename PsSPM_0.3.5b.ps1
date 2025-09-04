@@ -494,11 +494,14 @@ try {
                 "<span>Black</span>" = Format-Value -Value $PrinterData.BlackCount
                 "<span>Color</span>" = Format-Value -Value $PrinterData.ColorCount
                 "<span>Total</span>" = Format-Value -Value $PrinterData.TotalCount
-                "<span style='color:#00FFFF'>C</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TC)</span>"
-                "<span style='color:#FD3DB5'>M</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TM)</span>"
-                "<span style='color:#FFDE21'>Y</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TY)</span>"
-                "<span style='color:#000000'>K</span> Toner"  = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TK)</span>"
-                "<span style='color:#00FFFF'>C</span><span style='color:#FD3DB5'>M</span><span style='color:#FFDE21'>Y</span><span style='color:#000000'>K</span> DrumKit" = "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.DC) $(Format-TonerLevel -Level $tonerLevels.DM) $(Format-TonerLevel -Level $tonerLevels.DY) $(Format-TonerLevel -Level $tonerLevels.DKU) $(Format-TonerLevel -Level $tonerLevels.DK)</span>"
+                "<span style='color:#00FFFF'>C</span> Toner"  = if (-not($tonerLevels.TC -like $null)) {"<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TC)</span>"} else { "" }
+                "<span style='color:#FD3DB5'>M</span> Toner"  = if (-not($tonerLevels.TM -like $null)) {"<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TM)</span>"} else { "" }
+                "<span style='color:#FFDE21'>Y</span> Toner"  = if (-not($tonerLevels.TY -like $null)) {"<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TY)</span>"} else { "" }
+                "<span style='color:#000000'>K</span> Toner"  = if (-not($tonerLevels.TK -like $null)) {"<span class='container'>$(Format-TonerLevel -Level $tonerLevels.TK)</span>"} else { "" }
+                "<span style='color:#00FFFF'>C</span><span style='color:#FD3DB5'>M</span><span style='color:#FFDE21'>Y</span><span style='color:#000000'>K</span> DrumKit" = `
+                    if (-not($tonerLevels.DC -like $null -and $tonerLevels.DM -like $null -and $tonerLevels.DY -like $null -and $tonerLevels.DK -like $null -and $tonerLevels.DKU -like $null)) {
+                    "<span class='container'>$(Format-TonerLevel -Level $tonerLevels.DC) $(Format-TonerLevel -Level $tonerLevels.DM) $(Format-TonerLevel -Level $tonerLevels.DY) `
+                    $(Format-TonerLevel -Level $tonerLevels.DKU) $(Format-TonerLevel -Level $tonerLevels.DK)</span>"} else { "" }
                 "<span style='color:#FFDE21'>Display</span>" = if ($pdisplay.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputDisplay</ul></div>" } else { "" }
                 "<span style='color:#FFDE21'>Active Alerts</span>" = if ($pstatus.Length -ne 0) { "<div class='tooltip'><a class='show-link' href='http://$printerIP' target='_blank'>Show</a><ul class='tooltiptext'>$htmlOutputStatus</ul></div>" } else { "" }
                 # Add other columns similarly
