@@ -59,7 +59,9 @@ param(
     [ValidateSet("Console", "FullGui", "LightGui")]
     [string]$InterfaceMode = "FullGui",
     [string]$ConsoleFile = "",
-    [bool]$MailSend = $false
+    [bool]$MailSend = $false,
+    [string]$MailUser = "",
+    [string]$MailPass = ""
 )
 
 [string]$Version = "0.3.5b"
@@ -583,7 +585,7 @@ try {
     # Mail
     if ($MailSend) {
         Send-UniversalMail -MailFrom $MailFrom -MailTo @($MailTo) -CC @($CC) -BCC @($BCC) -Subject $Subject -Attachments @($filenamehtml, $filenamecsv) -UseDefaultCredentials $true `
-            -Body $MailHtmlBody -IsBodyHtml $true -SmtpServer $SmtpServer -SmtpPort $SmtpPort -EnableSsl $EnableSsl -SmtpTimeoutMs $SmtpTimeoutMs
+            -Username $MailUser -Password $MailPass -Body $MailHtmlBody -IsBodyHtml $true -SmtpServer $SmtpServer -SmtpPort $SmtpPort -EnableSsl $EnableSsl -SmtpTimeoutMs $SmtpTimeoutMs
     }
 }
 catch {
