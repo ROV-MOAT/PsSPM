@@ -48,9 +48,9 @@ function Send-UniversalMail {
 
         # Authentication parameters
         [switch]$UseDefaultCredentials,
-        [string]$Username,
-        [string]$Password,
-        [string]$Domain,
+        [string]$Username = "",
+        [string]$Password = "",
+        [string]$Domain = "",
         
         # Additional settings
         [int]$SmtpTimeoutMs = 30000,
@@ -64,7 +64,7 @@ function Send-UniversalMail {
     $attachmentsList = @()
 
     try {
-        Write-Host "Trying to send a letter via $SmtpServer`:$SmtpPort..." -ForegroundColor Yellow
+        Write-Log "Trying to send a letter via $SmtpServer`:$SmtpPort..."
         
         # Checking authentication parameters
         if (-not $UseDefaultCredentials -and (-not $Username -or -not $Password)) {
@@ -97,9 +97,9 @@ function Send-UniversalMail {
                     $attachment = [System.Net.Mail.Attachment]::new($attachmentPath)
                     $mail.Attachments.Add($attachment)
                     $attachmentsList += $attachment
-                    Write-Host "Attachment added: $attachmentPath" -ForegroundColor Gray
+                    Write-Log "Attachment added: $attachmentPath"
                 } else {
-                    Write-Warning "File not found: $attachmentPath"
+                    Write-Log "File not found: $attachmentPath" -Level "WARNING"
                 }
             }
         }
@@ -121,17 +121,17 @@ function Send-UniversalMail {
                     $smtpClient.SslProtocols = $sslProtocolValue
                 }
                 
-                Write-Host "SSL protocol is used: $SslProtocol" -ForegroundColor Gray
+                Write-Log "SSL protocol is used: $SslProtocol"
             }
             catch {
-                Write-Warning "Failed to establish SSL protocol: $SslProtocol. Error: $($_.Exception.Message)"
+                Write-Log "Failed to establish SSL protocol: $SslProtocol. Error: $($_.Exception.Message)" -Level "WARNING"
             }
         }
 
         # Setting up authentication
         if ($UseDefaultCredentials) {
             $smtpClient.UseDefaultCredentials = $true
-            Write-Host "Default credentials are used" -ForegroundColor Gray
+            Write-Log "Default credentials are used"
         } else {
             $smtpClient.UseDefaultCredentials = $false
             
@@ -139,34 +139,34 @@ function Send-UniversalMail {
             $securePassword = ConvertTo-SecureString $Password -AsPlainText -Force
             if ($Domain) {
                 $credential = New-Object System.Net.NetworkCredential($Username, $securePassword, $Domain)
-                Write-Host "Authentication with domain: $Domain" -ForegroundColor Gray
+                Write-Log "Authentication with domain: $Domain"
             } else {
                 $credential = New-Object System.Net.NetworkCredential($Username, $securePassword)
             }
             
             $smtpClient.Credentials = $credential
-            Write-Host "Authentication by login/password: $Username" -ForegroundColor Gray
+            Write-Log "Authentication by login/password: $Username"
         }
 
         # Sending a letter
-        Write-Host "Sending a letter..." -ForegroundColor Yellow
+        Write-Log "Sending a letter..."
         $smtpClient.Send($mail)
         
-        Write-Host "The letter has been sent successfully!" -ForegroundColor Green
-        Write-Host "From: $MailFrom" -ForegroundColor Gray
-        Write-Host "To: $($MailTo -join ', ')" -ForegroundColor Gray
-        Write-Host "Subject: $Subject" -ForegroundColor Gray
-        Write-Host "Server: $SmtpServer`:$SmtpPort" -ForegroundColor Gray
+        Write-Log "The letter has been sent successfully!" -ForegroundColor Green
+        Write-Log "From: $MailFrom" -ForegroundColor Gray
+        Write-Log "To: $($MailTo -join ', ')" -ForegroundColor Gray
+        Write-Log "Subject: $Subject" -ForegroundColor Gray
+        Write-Log "Server: $SmtpServer`:$SmtpPort" -ForegroundColor Gray
         if ($SslProtocol -ne "None") {
-            Write-Host "SSL protocol: $SslProtocol" -ForegroundColor Gray
+            Write-Log "SSL protocol: $SslProtocol"
         }
         
         return $true
     }
     catch {
-        Write-Error "Error sending email: $($_.Exception.Message)"
+        Write-Log "Error sending email: $($_.Exception.Message)" -Level "ERROR"
         if ($_.Exception.InnerException) {
-            Write-Error "Internal error: $($_.Exception.InnerException.Message)"
+            Write-Log "Internal error: $($_.Exception.InnerException.Message)" -Level "ERROR"
         }
         return $false
     }
@@ -179,11 +179,11 @@ function Send-UniversalMail {
         }
         if ($mail) { 
             $mail.Dispose() 
-            Write-Host "Letter resources freed" -ForegroundColor DarkGray
+            Write-Log "Letter resources freed"
         }
         if ($smtpClient) { 
             $smtpClient.Dispose() 
-            Write-Host "SMTP client resources have been released" -ForegroundColor DarkGray
+            Write-Log "SMTP client resources have been released"
         }
     }
 }

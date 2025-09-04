@@ -94,13 +94,13 @@ $Header = @"
     .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     .tooltiptext:hover { background-color: #000000; }
 
-    .container { border-radius: 3px; padding: 5px; margin: 0; }
+    .container { border-radius: 3px; padding: 5px; margin: 0; text-align: center; }
     .container:hover .toner-high,
     .container:hover .toner-medium,
     .container:hover .toner-low {
-        background-color: #000000; /* Цвет фона */
-        border-radius: 4px; /* Закругление углов */
-        padding: 2px 3px 2px 3px; /* Отступы вокруг текста - верх, право, низ, лево */
+        background-color: #000000;
+        border-radius: 4px;
+        padding: 2px 3px 2px 3px;
         color: #ffffff;
     }
 </style>

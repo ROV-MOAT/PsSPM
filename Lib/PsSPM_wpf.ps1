@@ -48,12 +48,24 @@ $xaml = @'
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
-            <GroupBox Header="SNMP Settings" Margin="0,30,0,0">
+            <GroupBox Header="SNMP Settings" Margin="0">
                 <StackPanel Orientation="Vertical" HorizontalAlignment="Center" Margin="0">
                     <StackPanel Orientation="Horizontal">
                         <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
                             <Label Content="Timeout (ms):" DockPanel.Dock="Left" Margin="0"/>
                             <TextBox x:Name="SNMPTimeout" TextAlignment="Center" DockPanel.Dock="Right" MaxLength="5" Width="45" Height="20" Margin="0"/>
+                        </DockPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
+                            <Label Content="Max Retries:" DockPanel.Dock="Left" Margin="0"/>
+                            <TextBox x:Name="SNMPMaxRetries" TextAlignment="Center" DockPanel.Dock="Right" MaxLength="2" Width="45" Height="20" Margin="0"/>
+                        </DockPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <DockPanel VerticalAlignment="Center" LastChildFill="False" Width="160">
+                            <Label Content="Retry Delay (ms):" DockPanel.Dock="Left" Margin="0"/>
+                            <TextBox x:Name="SNMPRetryDelay" TextAlignment="Center" DockPanel.Dock="Right" MaxLength="5" Width="45" Height="20" Margin="0"/>
                         </DockPanel>
                     </StackPanel>
                 </StackPanel>
@@ -150,6 +162,12 @@ function Show-UserGUIXaml {
     $SNMPTimeout = $form.FindName("SNMPTimeout")
     $SNMPTimeout.text = $SnmpTimeoutMs
 
+    $SNMPRetryDelay = $form.FindName("SNMPRetryDelay")
+    $SNMPRetryDelay.text = $SnmpDelayMs
+
+    $SNMPMaxRetries = $form.FindName("SNMPMaxRetries")
+    $SNMPMaxRetries.text = $SnmpMaxAttempts
+
     $TCPPortSet = $form.FindName("TCPPortSet")
     $TCPPortSet.text = $TCPPort
 
@@ -238,7 +256,7 @@ function Show-UserGUIXaml {
                 }
             }
         }
-        $SettingBoxes = @($CSVBuffer, $SNMPTimeout, $TCPPortSet, $TCPTimeout, $TCPRetryDelay, $TCPMaxRetries, $xTCPThreads)
+        $SettingBoxes = @($CSVBuffer, $SNMPTimeout, $SNMPRetryDelay, $SNMPMaxRetries, $TCPPortSet, $TCPTimeout, $TCPRetryDelay, $TCPMaxRetries, $xTCPThreads)
 
         # Registering handlers
         foreach ($Settingbox in $SettingBoxes) {
@@ -391,6 +409,8 @@ function Show-UserGUIXaml {
         # Save settings
         $script:CsvBufferSize = $CSVBuffer.Text
         $script:SnmpTimeoutMs = $SNMPTimeout.Text
+        $script:SnmpMaxAttempts = $SNMPMaxRetries.Text
+        $script:SnmpDelayMs = $SNMPRetryDelay.Text
         $script:TCPPort = $TCPPortSet.Text
         $script:TcpTimeoutMs = $TCPTimeout.Text
         $script:MaxRetries = $TCPMaxRetries.Text

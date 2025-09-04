@@ -14,33 +14,42 @@ function Get-SnmpData {
         [Parameter(Mandatory=$true)]
         [string]$Oid,
         [int]$UDPport = 161,
-        [int]$SnmpTimeoutMs = 5000
+        [int]$SnmpTimeoutMs = 5000,
+        [int]$SnmpMaxAttempts = 3,
+        [int]$SnmpDelayMs = 2000
     )
 
-    try {
-        # Set up SNMP manager
-        $IP = [System.Net.IPAddress]::Parse($Target)
-        $endpoint = [System.Net.IPEndPoint]::new($IP, $UDPport)
-        $vList = [System.Collections.Generic.List[Lextm.SharpSnmpLib.Variable]]::new()
-        $null = $vList.Add([Lextm.SharpSnmpLib.Variable]::new([Lextm.SharpSnmpLib.ObjectIdentifier]::new($Oid)))
+    $attempt = 0
+    
+    while ($attempt -lt $SnmpMaxAttempts) {
+        $attempt++
+        try {
+            # Set up SNMP manager
+            $IP = [System.Net.IPAddress]::Parse($Target)
+            $endpoint = [System.Net.IPEndPoint]::new($IP, $UDPport)
+            $vList = [System.Collections.Generic.List[Lextm.SharpSnmpLib.Variable]]::new()
+            $null = $vList.Add([Lextm.SharpSnmpLib.Variable]::new([Lextm.SharpSnmpLib.ObjectIdentifier]::new($Oid)))
 
-        $result = [Lextm.SharpSnmpLib.Messaging.Messenger]::Get(
-            [Lextm.SharpSnmpLib.VersionCode]::V2,
-            $endpoint,
-            [Lextm.SharpSnmpLib.OctetString]::new($Community),
-            $vList,
-            $SnmpTimeoutMs
-        )
-        return [PSCustomObject]@{
-            Success = $true
-            result = $result.Data.ToString()
+            $result = [Lextm.SharpSnmpLib.Messaging.Messenger]::Get(
+                [Lextm.SharpSnmpLib.VersionCode]::V2,
+                $endpoint,
+                [Lextm.SharpSnmpLib.OctetString]::new($Community),
+                $vList,
+                $SnmpTimeoutMs
+            )
+            return [PSCustomObject]@{
+                Success = $true
+                result = $result.Data.ToString()
+            }
+        }
+        catch {
+            Write-Log "SNMP query failed for $Target (OID: $Oid): $_" -Level "ERROR"
+            if ($attempt -lt $SnmpMaxAttempts) { Write-Log "SNMP Get - repeat in $SnmpDelayMs milliseconds..." -Level "WARNING"; Start-Sleep -Milliseconds $SnmpDelayMs }
         }
     }
-    catch { Write-Log "SNMP query failed for $Target (OID: $Oid): $_" -Level "WARNING"
-        return [PSCustomObject]@{
-            Success = $false
-            result = $null
-        }
+    return [PSCustomObject]@{
+        Success = $false
+        result = $null
     }
 }
 
@@ -95,5 +104,5 @@ function Get-SnmpBulkWalkWithEncoding {
         $cleanArray = $result_out.Where( {$_.Trim() -ne ""} )
         return $cleanArray
     }
-    catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "WARNING"; return "Error" }
+    catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "ERROR"; return "Error" }
 }
