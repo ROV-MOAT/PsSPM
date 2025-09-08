@@ -1,15 +1,18 @@
 ﻿<#
 .SYNOPSIS
-    PsSPM(ROV-MOAT) - PowerShell SNMP Printer Monitoring and Reporting Script
+    PowerShell SNMP Printer Monitoring and Reporting Script / PsSPM (ROV-MOAT)
     C# SNMP Library is used - https://github.com/lextudio/sharpsnmplib
 
 .DESCRIPTION
     Checks printer status via SNMP and generates CSV, HTML report with toner levels, counters, and information
 
+.LICENSE
+    Distributed under the MIT License. See the accompanying LICENSE file or https://github.com/ROV-MOAT/PsSPM/blob/main/LICENSE
+    
 .NOTES
     Version: 0.3.5b
     Author: Oleg Ryabinin + AI
-    Date: 2025-09-04
+    Date: 2025-09-08
     
     MESSAGE:
     Powershell 5+
@@ -17,6 +20,7 @@
     CHANGELOG:
 
     Ver. 0.3.5b
+    + MAC address
     + Mail
     + Interface Mode (Console, FullGui, LightGui)
     Optimization
@@ -67,23 +71,23 @@ param(
 [string]$Version = "0.3.5b"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-#REPORT
+# REPORT
 [bool]$HtmlFileReport = $true    # On/Off HTML Report out file
 [bool]$CsvFileReport  = $false     # On/Off CSV Report out file
 [int]$CsvBufferSize = 20     # Number of lines in buffer to write to CSV file
 
-#LOG
+# LOG
 [bool]$WriteLog = $false   # On/Off Logging Function
 [bool]$ShowLog = $true   # On/Off console output
 [string]$LogDir = "$PSScriptRoot\log"
 [string]$LogFile = "$logDir\PsSPM_log_$(Get-Date -Format 'yyyyMMddHHmmss').log"
 
-#SNMP
+# SNMP
 [int]$SnmpTimeoutMs = 5000  # Timeout SNMP - Milliseconds (1 sec. = 1000 ms) / 0 = infinity
 [int]$SnmpMaxAttempts = 3   # Retry Count
 [int]$SnmpDelayMs = 2000    # Milliseconds (1 sec. = 1000 ms)
 
-#TCP
+# TCP
 [int]$TCPPort = 80         # TCP port for check link
 [int]$TcpTimeoutMs = 1000   # Timeout TcpClient - Milliseconds (1 sec. = 1000 ms)
 [int]$MaxRetries   = 3     # Retry Count
@@ -94,14 +98,40 @@ param(
 [string]$MailFrom = "example@example.com"
 [string[]]$MailTo = "example@example.com"
 [string]$Subject = "PsSPM Report"
-[string]$SmtpServer = "smtp.example.com"
+[string]$SmtpServer = "mail.example.com"
 [string[]]$CC = ""
 [string[]]$BCC = ""
 [int]$SmtpPort = 25
 [bool]$EnableSsl = $false
 [int]$SmtpTimeoutMs = 10000
 
-#Path
+# Printer
+[hashtable]$modelPatterns = @{
+    "*333*" = "333"
+    "*B60*" = "B60"
+    "*B70*" = "B60"  # Same as B60
+    "*M40*" = "M40"
+    "*B80*" = "B80"
+    "*365*" = "365"
+    "*594*" = "365"  # Same as 365
+    "*462*" = "365"  # Same as 365
+    "*C40*" = "C40"
+    "*650*" = "660"  # Same as 660
+    "*660*" = "660"
+    "*651*" = "651"
+    "*T79*" = "T79"
+    "*332*" = "332"
+    "*670*" = "670"
+    "*450*" = "450"
+    "*C60*" = "C60"
+    "*533*" = "B60" # Same as B60
+    "*622*" = "622"
+    "*M42*" = "M42"
+    "*M25*" = "M25"
+    "*T73*" = "T73"
+}
+
+# Path
 [string]$PrinterOIDPath = "$PSScriptRoot\lib\PsSPM_oid.psd1"
 [string]$ScriptGuiXaml = "$PSScriptRoot\lib\PsSPM_wpf.ps1"
 [string]$HtmlHeader = "$PSScriptRoot\lib\PsSPM_html.ps1"
@@ -157,30 +187,6 @@ function Get-PrinterModelOIDSet {
         [Parameter(Mandatory=$true)]
         [hashtable]$OIDMapping
     )
-    # More flexible model matching with wildcards
-    $modelPatterns = @{
-        "*333*" = "333"
-        "*B60*" = "B60"
-        "*B70*" = "B60"  # Same as B60
-        "*M40*" = "M40"
-        "*B80*" = "B80"
-        "*365*" = "365"
-        "*594*" = "365"  # Same as 365
-        "*462*" = "365"  # Same as 365
-        "*C40*" = "C40"
-        "*650*" = "660"  # Same as 660
-        "*660*" = "660"
-        "*651*" = "651"
-        "*T79*" = "T79"
-        "*332*" = "332"
-        "*670*" = "670"
-        "*450*" = "450"
-        "*C60*" = "C60"
-        "*533*" = "B60" # Same as B60
-        "*622*" = "622"
-        "*M42*" = "M42"
-        "*M25*" = "M25"
-    }
 
     foreach ($pattern in $modelPatterns.Keys) { if ($Model -like $pattern) {return $OIDMapping[$modelPatterns[$pattern]]} }
     return $OIDMapping["Default"]
@@ -214,6 +220,12 @@ function Get-PrinterData {
             return $null
         }
 
+        $macadr = Get-SnmpData -Target $TargetHost -Oid $OidMapping["Default"].PMac -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs -MacAdr
+        if (-not $macadr) { Write-Log "Failed to get printer MAC $TargetHost" -Level "WARNING"
+            return $null
+        }
+        #write-host $macadr.result
+
         # Determine OID set based on model
         $Script:oidSet = Get-PrinterModelOIDSet -Model $model.result -OIDMapping $OidMapping
         if (-not $oidSet) { Write-Log "Not OID set for model: $($model.result)" -Level "WARNING"
@@ -221,14 +233,25 @@ function Get-PrinterData {
         }
 
         # Safe add to dictionary
-        $results['Model'] = $model.result
-        $results['PName'] = $printername.result
-        $results['IPAddress'] = $TargetHost
+        $results['Model']       = $model.result
+        $results['PName']       = $printername.result
+        $results['IPAddress']   = $TargetHost
+        $results['PMac']        = $macadr.result
 
         foreach ($item in $oidSet.GetEnumerator()) {
+            $Value = $null
+
             if ($item.Name -in @("Display", "Status")) { continue }
             
-            if ($item.Value -is [string]) {
+            if ($item.Name -in @("PMac")) {
+                $Name = $item.Name
+                try { $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs -MacAdr
+                    if ($value.Success -like 'true' ) { $results[$Name] = $Value.result } else { throw }
+                }
+                catch { Write-Log "Error Get-SnmpData for $Name : $($_.Exception.Message)" -Level "WARNING"
+                    $results[$Name] = "Error"
+                }
+            } else {
                 $Name = $item.Name
                 try { $Value = Get-SnmpData -Target $TargetHost -Oid $item.Value -SnmpTimeoutMs $SnmpTimeoutMs -SnmpMaxAttempts $SnmpMaxAttempts -SnmpDelayMs $SnmpDelayMs
                     if ($value.Success -like 'true' ) { $results[$Name] = $Value.result } else { throw }
@@ -489,8 +512,9 @@ try {
             # Add information to HTML report
             $null = $DataHtmlReport.Add([PSCustomObject]@{
                 "<span>IP</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$printerIP</a>"
-                "<span>Name</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$($PrinterData.PName)</a>"
                 "<span>Ping</span>" = Format-Status -TcpStatus $TcpStatus
+                "<span>Name</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$($PrinterData.PName)</a>"
+                "<span>MAC</span>" = Format-Value -Value $PrinterData.PMac
                 "<span>Model</span>" = Format-Value -Value $PrinterData.Model
                 "<span>S/N</span>" = Format-Value -Value $PrinterData.Serial
                 "<span>Black</span>" = Format-Value -Value $PrinterData.BlackCount
@@ -513,9 +537,10 @@ try {
         if($CsvFileReport) {
             # Add information to CSV report
             $null = $DataCsvReport.Add([PSCustomObject]@{
-                "IP"    = "$printerIP"
+                "IP"    = $printerIP
+                "Ping"  = $TcpStatus
                 "Name"  = $PrinterData.PName
-                "Ping"  = "$TcpStatus"
+                "MAC"   = $PrinterData.PMac
                 "Model" = $PrinterData.Model
                 "S/N"   = $PrinterData.Serial
                 "Black" = $PrinterData.BlackCount
@@ -589,7 +614,7 @@ try {
     
     # Mail
     if ($MailSend) {
-        Send-UniversalMail -MailFrom $MailFrom -MailTo @($MailTo) -CC @($CC) -BCC @($BCC) -Subject $Subject -Attachments @($filenamehtml, $filenamecsv) -UseDefaultCredentials $true `
+        Send-UniversalMail -MailFrom $MailFrom -MailTo @($MailTo) -CC @($CC) -BCC @($BCC) -Subject $Subject -Attachments @($filenamehtml, $filenamecsv) -UseDefaultCredentials `
             -Username $MailUser -Password $MailPass -Body $MailHtmlBody -IsBodyHtml $true -SmtpServer $SmtpServer -SmtpPort $SmtpPort -EnableSsl $EnableSsl -SmtpTimeoutMs $SmtpTimeoutMs
     }
 }
