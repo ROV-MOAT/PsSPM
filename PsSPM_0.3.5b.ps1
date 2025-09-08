@@ -109,6 +109,7 @@ param(
 [hashtable]$modelPatterns = @{
     "*333*" = "333"
     "*B60*" = "B60"
+	"*B61*" = "B60"	 # Same as B60
     "*B70*" = "B60"  # Same as B60
     "*M40*" = "M40"
     "*B80*" = "B80"
@@ -626,4 +627,5 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+
 #endregion
