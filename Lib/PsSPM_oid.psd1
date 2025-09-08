@@ -9,7 +9,7 @@
     Define OIDs for different printer models
     Xerox - C400/405, C600/605, B600/B605/B610, 3330, 3325, 3655, 8045, 7025, 6510, 6600, 6700
     HP - M402, M428, M252n
-    Lexmark - MX622ade
+    Lexmark - MX611de, MX622ade
     Kyocera - ECOSYS MA4500fx
 #>
 
@@ -235,8 +235,20 @@ $Script:oidMapping = @{
         TonerKTotal     = ".1.3.6.1.2.1.43.11.1.1.8.1.1"
         TonerKCurrent   = ".1.3.6.1.2.1.43.11.1.1.9.1.1"
     }
+    "611" = @{
+        PMac            = ".1.3.6.1.2.1.2.2.1.6.2"
+        Serial          = ".1.3.6.1.2.1.43.5.1.1.17.1"
+        BlackCount      = ".1.3.6.1.2.1.43.10.2.1.4.1.1"
+        Display         = ".1.3.6.1.2.1.43.16.5.1.2.1"
+        Status          = ".1.3.6.1.2.1.43.18.1.1.8.1"
+        TonerKTotal     = ".1.3.6.1.2.1.43.11.1.1.8.1.1"
+        TonerKCurrent   = ".1.3.6.1.2.1.43.11.1.1.9.1.1"
+        DrumKTotal      = ".1.3.6.1.2.1.43.11.1.1.8.1.2"
+        DrumKCurrent    = ".1.3.6.1.2.1.43.11.1.1.9.1.2"
+    }
     # Add other OIDs similarly
 }
 
 #endregion
+
 
