@@ -7,7 +7,7 @@
 
 .DESCRIPTION
     Define OIDs for different printer models
-    Xerox - C400/405, C600/605, B600/B605/610, 3330, 3325, 3655, 8045, 7025, 6510, 6600, 6700
+    Xerox - C400/405, C600/605, B600/B605/B610, 3330, 3325, 3655, 8045, 7025, 6510, 6600, 6700
     HP - M402, M428, M252n
     Lexmark - MX622ade
     Kyocera - ECOSYS MA4500fx
@@ -239,3 +239,4 @@ $Script:oidMapping = @{
 }
 
 #endregion
+
