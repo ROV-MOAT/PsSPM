@@ -9,7 +9,12 @@ Interface Mode - Console, FullGui(WPF), LightGui(OpenFileDialog).
 
 You can query any printer, you need to change/add the model and OID in the file "Lib\PsSPM_oid.psd1", and change/add the value in the table "$modelPatterns".
 
-Example for console: Powershell.exe -Command "& {D:\PsSPM_0.3.5b\PsSPM_0.3.5b.ps1 -InterfaceMode "Console" -ConsoleFile "D:\PsSPM_0.3.5b\IP\*.txt" -MailSend $true -MailUser "" -MailPass ""}", other modes have GUI.
+Example for console:
+Powershell.exe -Command "& {D:\PsSPM_0.3.5b\PsSPM_0.3.5b.ps1 -InterfaceMode "Console" -ConsoleFile "D:\PsSPM_0.3.5b\IP\*.txt" -MailSend $true -MailUser "" -MailPass ""}", other modes have GUI.
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.5b\IP\*.txt
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode FullGui
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode LightGui
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.5b\IP\*.txt -MailSend $false -MailUser User -MailPass Pass
 
 Sending a letter is convenient to use in Console mode, there are no mail settings in the GUI.
 
