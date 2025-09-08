@@ -55,7 +55,7 @@ function Get-SnmpData {
             } else {
                 return [PSCustomObject]@{
                     Success = $true
-                    result = $result.Data.ToString().Replace('??', '')
+                    result = $result.Data.ToString().Replace('??', '') # fix for HP 730/790 serial
                 }
             }
         }
@@ -121,4 +121,5 @@ function Get-SnmpBulkWalkWithEncoding {
         return $cleanArray
     }
     catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "ERROR"; return "<span class='error'>Error</span>" }
+
 }
