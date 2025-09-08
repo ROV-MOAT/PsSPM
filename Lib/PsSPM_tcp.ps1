@@ -1,6 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    PsSPM(ROV-MOAT) - PowerShell SNMP Printer Monitoring and Reporting Script
+    PowerShell SNMP Printer Monitoring and Reporting Script / PsSPM (ROV-MOAT)
+
+.LICENSE
+    Distributed under the MIT License. See the accompanying LICENSE file or https://github.com/ROV-MOAT/PsSPM/blob/main/LICENSE
 
 .DESCRIPTION
     TCP test function

@@ -1,7 +1,10 @@
 ﻿<#
 .SYNOPSIS
-    PsSPM(ROV-MOAT) - PowerShell SNMP Printer Monitoring and Reporting Script
+    PowerShell SNMP Printer Monitoring and Reporting Script / PsSPM (ROV-MOAT)
 
+.LICENSE
+    Distributed under the MIT License. See the accompanying LICENSE file or https://github.com/ROV-MOAT/PsSPM/blob/main/LICENSE
+    
 .DESCRIPTION
     Mail function
 
@@ -161,14 +164,14 @@ function Send-UniversalMail {
             Write-Log "SSL protocol: $SslProtocol"
         }
         
-        return $true
+        return
     }
     catch {
         Write-Log "Error sending email: $($_.Exception.Message)" -Level "ERROR"
         if ($_.Exception.InnerException) {
             Write-Log "Internal error: $($_.Exception.InnerException.Message)" -Level "ERROR"
         }
-        return $false
+        return
     }
     finally {
         # Resource release

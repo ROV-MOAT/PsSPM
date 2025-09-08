@@ -1,6 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    PsSPM(ROV-MOAT) - PowerShell SNMP Printer Monitoring and Reporting Script
+    PowerShell SNMP Printer Monitoring and Reporting Script / PsSPM (ROV-MOAT)
+
+.LICENSE
+    Distributed under the MIT License. See the accompanying LICENSE file or https://github.com/ROV-MOAT/PsSPM/blob/main/LICENSE
 
 .DESCRIPTION
     SNMP Get and BulkWal functions
@@ -16,7 +19,8 @@ function Get-SnmpData {
         [int]$UDPport = 161,
         [int]$SnmpTimeoutMs = 5000,
         [int]$SnmpMaxAttempts = 3,
-        [int]$SnmpDelayMs = 2000
+        [int]$SnmpDelayMs = 2000,
+        [switch]$MacAdr
     )
 
     $attempt = 0
@@ -37,9 +41,22 @@ function Get-SnmpData {
                 $vList,
                 $SnmpTimeoutMs
             )
-            return [PSCustomObject]@{
-                Success = $true
-                result = $result.Data.ToString()
+            if ($MacAdr) {
+                $Value = $result.data.GetRaw()
+                $rawBytes = [System.BitConverter]::ToString($Value).Replace('-', '')
+                #$dectohex = $rawBytes.ToString()
+                $hex = ($rawBytes.ToString() -replace '(.{2})', '$1:') -replace ':$'
+
+                return [PSCustomObject]@{
+                    Success = $true
+                    result = $hex
+                }
+            
+            } else {
+                return [PSCustomObject]@{
+                    Success = $true
+                    result = $result.Data.ToString().Replace('??', '')
+                }
             }
         }
         catch {
@@ -92,7 +109,6 @@ function Get-SnmpBulkWalkWithEncoding {
             $data = $result.Data
             $value = $null
 
-            # Handle OctetString encoding
             if ($data.TypeCode -eq [Lextm.SharpSnmpLib.SnmpType]::OctetString) {
                 foreach ($enc in $encodings) {
                     try { $value = $data.ToString($enc); break }
@@ -104,5 +120,5 @@ function Get-SnmpBulkWalkWithEncoding {
         $cleanArray = $result_out.Where( {$_.Trim() -ne ""} )
         return $cleanArray
     }
-    catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "ERROR"; return "Error" }
+    catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "ERROR"; return "<span class='error'>Error</span>" }
 }
