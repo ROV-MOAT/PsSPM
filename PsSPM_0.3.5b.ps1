@@ -12,7 +12,7 @@
 .NOTES
     Version: 0.3.5b
     Author: Oleg Ryabinin + AI
-    Date: 2025-09-08
+    Date: 2025-09-09
     
     MESSAGE:
     Powershell 5+
@@ -109,7 +109,7 @@ param(
 [hashtable]$modelPatterns = @{
     "*333*" = "333"
     "*B60*" = "B60"
-	"*B61*" = "B60"	 # Same as B60
+    "*B61*" = "B60"
     "*B70*" = "B60"  # Same as B60
     "*M40*" = "M40"
     "*B80*" = "B80"
@@ -127,7 +127,7 @@ param(
     "*C60*" = "C60"
     "*533*" = "B60" # Same as B60
     "*622*" = "622"
-	"*611*" = "611"
+    "*611*" = "611"
     "*M42*" = "M42"
     "*M25*" = "M25"
     "*T73*" = "T73"
@@ -628,6 +628,4 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
-
 #endregion
-
