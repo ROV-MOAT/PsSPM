@@ -1,6 +1,6 @@
 Powershell SNMP Printer Monitoring and Reporting Script.
 
-<p align="center"><img src="https://github.com/ROV-MOAT/PsSPM/blob/main/PsSPM.png"/></p>)
+<p align="center"><img src="https://github.com/ROV-MOAT/PsSPM/blob/main/PsSPM.png"/></p>
 
 C# SNMP Library is used - https://github.com/lextudio/sharpsnmplib
 
