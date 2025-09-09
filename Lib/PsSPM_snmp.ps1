@@ -43,8 +43,7 @@ function Get-SnmpData {
             )
             if ($MacAdr) {
                 $Value = $result.data.GetRaw()
-                $rawBytes = [System.BitConverter]::ToString($Value).Replace('-', '')
-                #$dectohex = $rawBytes.ToString()
+                $rawBytes = [System.BitConverter]::ToString($Value).replace('-', '')
                 $hex = ($rawBytes.ToString() -replace '(.{2})', '$1:') -replace ':$'
 
                 return [PSCustomObject]@{
@@ -53,9 +52,15 @@ function Get-SnmpData {
                 }
             
             } else {
+                # HP T730/795, Lexmark 611 - serial fix
+                if ($item.Name -in @("Serial")) {
+                    $fixdata = ($result.Data.ToString().replace('??', '')) -split('-')
+                    $result = $fixdata[0]
+                } else { $result = $result.Data.ToString() }
+
                 return [PSCustomObject]@{
                     Success = $true
-                    result = $result.Data.ToString().Replace('??', '') # '??' fix for HP 730/790 serial
+                    result = $result
                 }
             }
         }
@@ -121,6 +126,4 @@ function Get-SnmpBulkWalkWithEncoding {
         return $cleanArray
     }
     catch { Write-Log "SNMP Walk query failed for $Target (OID: $Oid): $_" -Level "ERROR"; return "<span class='error'>Error</span>" }
-
 }
-
