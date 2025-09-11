@@ -60,7 +60,7 @@
     Download C# SNMP Library - https://www.nuget.org/packages/Lextm.SharpSnmpLib/
 #>
 param(
-    [ValidateSet("Console", "FullGui", "LightGui")]
+    [ValidateSet("Console", "FullGui")]
     [string]$InterfaceMode = "FullGui",
     [string]$ConsoleFile = "",
     [bool]$MailSend = $false,
@@ -170,18 +170,6 @@ function Write-Log {
     }
 }
 
-# Open File Dialog function
-function Open-File([string] $initialDirectory){
-    Add-Type -AssemblyName System.Windows.Forms
-    $OpenFileDialog = [System.Windows.Forms.OpenFileDialog]::new()
-    try {
-        $OpenFileDialog.initialDirectory = $initialDirectory
-        $OpenFileDialog.filter = "Text files (*.txt)|*.txt|CSV files (*.csv)|*.csv|All files (*.*)|*.*"
-        if ($OpenFileDialog.ShowDialog() -eq 'OK') { return $OpenFileDialog.filename }
-    }
-    finally { $OpenFileDialog.Dispose() }
-}
-
 function Get-PrinterModelOIDSet {
     param(
         [Parameter(Mandatory=$true)]
@@ -226,7 +214,6 @@ function Get-PrinterData {
         if (-not $macadr) { Write-Log "Failed to get printer MAC $TargetHost" -Level "WARNING"
             return $null
         }
-        #write-host $macadr.result
 
         # Determine OID set based on model
         $Script:oidSet = Get-PrinterModelOIDSet -Model $model.result -OIDMapping $OidMapping
@@ -409,12 +396,6 @@ try {
             } else { throw " WPF GUI not load" | Out-Null }
 
             if ($selectedFile = Show-UserGUIXaml -Directory $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
-                else { Write-Log "Printer list file not load" -Level "ERROR"
-                throw "Printer list file not load" | Out-Null
-            }
-        }
-        "LightGui" {
-            if ($selectedFile = Open-File $PrinterListPath) { Write-Log "=== Printer list: OK ===" }
                 else { Write-Log "Printer list file not load" -Level "ERROR"
                 throw "Printer list file not load" | Out-Null
             }
@@ -628,4 +609,5 @@ finally {
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
+
 #endregion
