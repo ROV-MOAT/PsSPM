@@ -127,6 +127,7 @@ $xaml = @'
                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                     <Label Content="or select file:" Margin="0"/>
                     <ComboBox x:Name="FileSelectComboBox" Margin="0" Width="133" Height="25" IsEditable="True"/>
+                    <Button x:Name="DirButton" Content="D" Width="20" Height="20" Padding="0" Margin="5,0,0,0"/>
                 </StackPanel>
             </StackPanel>
         </GroupBox>
@@ -192,8 +193,36 @@ function Show-UserGUIXaml {
     $Octet4 = $form.FindName("Octet4")
     $Octet5 = $form.FindName("Octet5")
     $FileComboBox = $form.FindName("FileSelectComboBox")
-    $Button1 = $form.FindName("RunButton")
+    $ButtonRun = $form.FindName("RunButton")
+    $ButtonDir = $form.FindName("DirButton")
 
+    function Open-Dir {
+        param(
+            [Parameter(Mandatory=$false)]
+            [switch]$NoNewFolderButton
+        )
+
+        Push-Location -Path $Directory
+        $script:selectedFolder = $null
+        
+        try {
+            $folderBrowser = [System.Windows.Forms.FolderBrowserDialog]::new()
+            $folderBrowser.Description = "Select a folder"
+            $folderBrowser.RootFolder = [System.Environment+SpecialFolder]::MyComputer
+            $folderBrowser.ShowNewFolderButton = -not $NoNewFolderButton.IsPresent
+
+            $result = $folderBrowser.ShowDialog()
+
+            if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+                return $script:selectedFolder = $folderBrowser.SelectedPath
+            }
+        } catch {
+            Write-Log "Failed to load folder dialog: $($_.Exception.Message)" -Level "WARNING"
+            return $script:selectedFolder = Pop-Location
+        }
+        return $null
+    }
+    
     function Update-ComboBox {
         param (
             [string]$CbDirectory = $PSScriptRoot  # Default to current directory
@@ -388,8 +417,13 @@ function Show-UserGUIXaml {
             }
         })
     }
-
-    $Button1.Add_Click({
+    
+    $ButtonDir.Add_Click({
+        Open-Dir -NoNewFolderButton
+        Update-ComboBox -CbDirectory $selectedFolder
+    })
+    
+    $ButtonRun.Add_Click({
         if ($Octet5.Text -ne "" -and $Octet4.Text -ne "") {
             if ([int]$Octet4.Text -gt [int]$Octet5.Text) {
                 [System.Windows.Forms.MessageBox]::Show("The ending address must be greater than the starting address.", "Warning", "OK", "Warning")
@@ -404,7 +438,9 @@ function Show-UserGUIXaml {
                 $script:PrinterRange = $ipList
             }
         } elseif ($FileComboBox.SelectedItem -notlike $null -and $FileComboBox.SelectedItem -ne "") {
-            $script:selectedFile = Join-Path -Path $Directory -ChildPath $FileComboBox.SelectedItem
+            if (-not($selectedFolder -like "" -or $null -eq $selectedFolder)) {
+                $script:selectedFile = Join-Path -Path $selectedFolder -ChildPath $FileComboBox.SelectedItem
+            } else { $script:selectedFile = Join-Path -Path $Directory -ChildPath $FileComboBox.SelectedItem }
         } else { [System.Windows.Forms.MessageBox]::Show("Enter IP address or select a file.", "Warning", "OK", "Warning")
             return
         }
@@ -428,4 +464,5 @@ function Show-UserGUIXaml {
     $form.ShowDialog() | Out-Null
 
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
+
 }
