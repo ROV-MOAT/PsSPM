@@ -154,14 +154,11 @@ if (-not (Test-Path $ReportDir)) { New-Item -ItemType Directory -Path $ReportDir
 # Logging function
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
-
     $logMessage = "$timestamp [$Level] - $Message"
     
     if ($WriteLog) {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-
         Add-Content -Path $LogFile -Value $logMessage -Encoding UTF8
-        
     }
     if ($ShowLog) {
         if ($Level -eq "ERROR") { Write-Host $logMessage -ForegroundColor Red }
@@ -611,3 +608,4 @@ finally {
 }
 
 #endregion
+
