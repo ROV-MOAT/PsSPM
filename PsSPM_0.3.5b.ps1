@@ -22,7 +22,7 @@
     Ver. 0.3.5b
     + MAC address
     + Mail
-    + Interface Mode (Console, FullGui, LightGui)
+    + Interface Mode (Console, FullGui)
     Optimization
     
     Ver. 0.3.4
@@ -608,4 +608,5 @@ finally {
 }
 
 #endregion
+
 
