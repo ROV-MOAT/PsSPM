@@ -104,13 +104,187 @@ $Header = @"
     .container:hover .toner-low {
         color: #ffffff;
     }
+    
+    /* Search */
+    .search-container {
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 5px;
+        border: 2px solid #ddd;
+        margin-bottom: 15px;
+        width: max-content;
+    }
+    .search-input {
+        padding: 4px;
+        width: 220px;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+    }
+    .search-input:focus {
+        outline: none;
+        border: 2px solid green;
+    }
+
+    .column-selector {
+        font-size: 14px;
+    }
+    .column-option {
+        display: inline-block;
+        margin-left: 10px;
+        padding: 5px 10px;
+        background-color: #e7e7e7;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .column-option:hover {
+        background-color: #d4d4d4;
+    }
+    .column-option.active {
+        background-color: green;
+        color: white;
+    }
+
+    tr.hidden {
+        display: none;
+    }
 </style>
+<script>
+    let selectedColumn = 'all';
+    let originalTableData = [];
+    
+    // Save the original table data
+    function saveOriginalData() {
+        const table = document.getElementById('PrinterTable');
+        const rows = table.getElementsByTagName('tr');
+        originalTableData = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            const rowData = [];
+            for (let j = 0; j < cells.length; j++) {
+                rowData.push(cells[j].innerHTML);
+            }
+            originalTableData.push(rowData);
+        }
+    }
+    
+    // Basic filtering function
+    function filterTable() {
+        const searchTerm = document.getElementById('searchInput').value.trim();
+        const table = document.getElementById('PrinterTable');
+        const rows = table.getElementsByTagName('tr');
+        
+        // If the search query is empty, we show all lines
+        if (!searchTerm) {
+            for (let i = 1; i < rows.length; i++) {
+                rows[i].classList.remove('hidden');
+            }
+            noResults.style.display = 'none';
+            return;
+        }
+        
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        let foundResults = false;
+                
+        // Filtering rows
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let shouldShow = false;
+            
+            if (selectedColumn === 'all') {
+                // Search in all columns
+                for (let j = 0; j < cells.length; j++) {
+                    const cellText = cells[j].textContent.toLowerCase();
+                    if (cellText.includes(lowerSearchTerm)) {
+                        shouldShow = true;
+                    }
+                }
+            } else {
+                // Search only in the selected column
+                const columnIndex = parseInt(selectedColumn);
+                if (cells[columnIndex]) {
+                    const cellText = cells[columnIndex].textContent.toLowerCase();
+                    if (cellText.includes(lowerSearchTerm)) {
+                        shouldShow = true;
+                    }
+                }
+            }
+            
+            if (shouldShow) {
+                rows[i].classList.remove('hidden');
+                foundResults = true;
+            } else {
+                rows[i].classList.add('hidden');
+            }
+        }
+    }
+    
+    // Selecting a column to search
+    function selectColumn(column) {
+        selectedColumn = column;
+        
+        // Updating the visual state of buttons
+        const options = document.querySelectorAll('.column-option');
+        options.forEach(option => {
+            if (option.dataset.column === column) {
+                option.classList.add('active');
+            } else {
+                option.classList.remove('active');
+            }
+        });
+        
+        // Apply the filter with new settings
+        filterTable();
+    }
+    
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // We save the original data
+        saveOriginalData();
+        
+        // Handler for the search field
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', filterTable);
+        searchInput.addEventListener('keyup', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                filterTable();
+            }
+        });
+        
+        // Handlers for selecting columns
+        const columnOptions = document.querySelectorAll('.column-option');
+        columnOptions.forEach(option => {
+           option.addEventListener('click', function() {
+                selectColumn(this.dataset.column);
+            });
+        });
+        
+    });
+</script>
 <span><font color="black">This page was automatically generated by PowerShell SNMP printer monitoring (<a style='text-decoration: none; color: #000000ff;' href='https://github.com/ROV-MOAT/PsSPM' target='_blank'>PsSPM</a>).</font></span>
 <p></p>
+<div class="search-container">
+    <div class="column-selector">
+        <strong>Search in:</strong>
+        <div class="column-option active" data-column="all">All</div>
+        <div class="column-option" data-column="0">IP</div>
+        <div class="column-option" data-column="2">Name</div>
+        <div class="column-option" data-column="3">MAC</div>
+        <div class="column-option" data-column="4">Model</div>
+        <div class="column-option" data-column="5">S/N</div>
+        <input type="text" id="searchInput" placeholder="Enter text to search..." class="search-input">
+    </div>
+</div>
 "@
 
 $MailHtmlBody = @"
 <span><font color="black">This message was automatically generated by PowerShell SNMP printer monitoring (PsSPM).</font></span>
 <p>Date: $(Get-Date)</p>
 "@
+
 #endregion
