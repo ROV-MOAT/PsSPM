@@ -12,7 +12,7 @@
 .NOTES
     Version: 0.3.5b
     Author: Oleg Ryabinin + AI
-    Date: 2025-09-09
+    Date: 2026-01-29
     
     MESSAGE:
     Powershell 5+
@@ -20,6 +20,7 @@
     CHANGELOG:
 
     Ver. 0.3.5b
+	+ Search in
     + MAC address
     + Mail
     + Interface Mode (Console, FullGui)
@@ -610,6 +611,7 @@ finally {
 }
 
 #endregion
+
 
 
 
