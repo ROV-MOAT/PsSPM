@@ -565,7 +565,7 @@ try {
 
         $htmlContent = $DataHtmlReport | ConvertTo-Html -Title "Printer Status Report" -Head $Header -PostContent "<p>Report generated: $(Get-Date)</p>"
         # Fix HTML encoding
-        $htmlContent = $htmlContent -replace '&lt;', '<' -replace '&#39;', "'" -replace '&gt;', '>'
+        $htmlContent = $htmlContent -replace '&lt;', '<' -replace '&#39;', "'" -replace '&gt;', '>' -replace'<table>', '<table id="PrinterTable">'
 
         if ($PrinterRange.Value.Count -gt 0) {
             $filenamehtml = "$ReportDir\PsSPM_report_$($PrinterRange[0].Value)-$(Get-Date -Format 'yyyyMMddHHmmss').html"
@@ -611,6 +611,7 @@ finally {
 }
 
 #endregion
+
 
 
 
