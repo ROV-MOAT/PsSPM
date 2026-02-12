@@ -12,7 +12,7 @@
 .NOTES
     Version: 0.3.5b
     Author: Oleg Ryabinin + AI
-    Date: 2026-01-29
+    Date: 2026-02-12
     
     MESSAGE:
     Powershell 5+
@@ -20,6 +20,7 @@
     CHANGELOG:
 
     Ver. 0.3.5b
+	+ Copy text - MAC, S/N
 	+ Search in
     + MAC address
     + Mail
@@ -497,9 +498,9 @@ try {
                 "<span>IP</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$printerIP</a>"
                 "<span>Ping</span>" = Format-Status -TcpStatus $TcpStatus
                 "<span>Name</span>" = "<a class='printer-link' href='http://$printerIP' target='_blank'>$($PrinterData.PName)</a>"
-                "<span>MAC</span>" = Format-Value -Value $PrinterData.PMac
+                "<span>MAC</span>" = "<span style='cursor: copy;' onclick='copyText(this)'>$(Format-Value -Value $PrinterData.PMac)</span>"
                 "<span>Model</span>" = Format-Value -Value $PrinterData.Model
-                "<span>S/N</span>" = Format-Value -Value $PrinterData.Serial
+                "<span>S/N</span>" = "<span style='cursor: copy;' onclick='copyText(this)'>$(Format-Value -Value $PrinterData.Serial)</span>"
                 "<span>Black</span>" = Format-Value -Value $PrinterData.BlackCount
                 "<span>Color</span>" = Format-Value -Value $PrinterData.ColorCount
                 "<span>Total</span>" = Format-Value -Value $PrinterData.TotalCount
@@ -611,6 +612,7 @@ finally {
 }
 
 #endregion
+
 
 
 
