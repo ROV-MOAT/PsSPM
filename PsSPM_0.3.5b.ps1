@@ -564,7 +564,7 @@ try {
             Write-Log "=== Html Header: OK ==="
         } else { throw "Html Header not load" | Out-Null }
 
-        $htmlContent = $DataHtmlReport | ConvertTo-Html -Title "Printer Status Report" -Head $Header -PostContent "<p>Report generated: $(Get-Date)</p>"
+        $htmlContent = $DataHtmlReport | ConvertTo-Html -Title "Printer Status Report" -Head $Header -PostContent "<p>&#169; 2026 ROV-MOAT</p>"
         # Fix HTML encoding
         $htmlContent = $htmlContent -replace '&lt;', '<' -replace '&#39;', "'" -replace '&gt;', '>' -replace'<table>', '<table id="PrinterTable">'
 
@@ -612,6 +612,7 @@ finally {
 }
 
 #endregion
+
 
 
 
