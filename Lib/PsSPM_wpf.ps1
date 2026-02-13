@@ -15,7 +15,7 @@ $xaml = @'
 <Window 
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PsSPM 0.3.5b" SizeToContent="WidthAndHeight" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True" FontFamily="Segoe UI" FontSize="13">
+        Title="PsSPM 0.3.5b-20260212" SizeToContent="WidthAndHeight" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Topmost="True" FontFamily="Segoe UI" FontSize="13">
     <Window.Resources>
         <Style TargetType="ToolTip">
             <Setter Property="Background" Value="LightGoldenrodYellow"/>
@@ -466,3 +466,4 @@ function Show-UserGUIXaml {
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
 
 }
+
