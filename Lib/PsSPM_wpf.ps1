@@ -144,6 +144,7 @@ function Show-UserGUIXaml {
     $xmlDoc.LoadXml($xaml)
     $reader = (New-Object System.Xml.XmlNodeReader($xmlDoc))
     $form = [Windows.Markup.XamlReader]::Load($reader)
+    $form.Title = $script:Version
 
     $HtmlCheckBox = $form.FindName("HtmlCheckBox")
     $HtmlCheckBox.isChecked = $script:HtmlFileReport
@@ -466,4 +467,5 @@ function Show-UserGUIXaml {
     if ($PrinterRange -notlike $null) { return $script:PrinterRange } else { return $script:selectedFile }
 
 }
+
 
