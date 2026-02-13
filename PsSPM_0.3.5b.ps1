@@ -70,7 +70,7 @@ param(
     [string]$MailPass = ""
 )
 
-[string]$Version = "0.3.5b"
+[string]$Version = "PsSPM 0.3.5b-20260212"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # REPORT
@@ -564,7 +564,7 @@ try {
             Write-Log "=== Html Header: OK ==="
         } else { throw "Html Header not load" | Out-Null }
 
-        $htmlContent = $DataHtmlReport | ConvertTo-Html -Title "Printer Status Report" -Head $Header -PostContent "<p>&#169; 2026 ROV-MOAT</p>"
+        $htmlContent = $DataHtmlReport | ConvertTo-Html -Title "Printer Status Report" -Head $Header -PostContent "<span style='font-size: 12px;'>$Version</span>"
         # Fix HTML encoding
         $htmlContent = $htmlContent -replace '&lt;', '<' -replace '&#39;', "'" -replace '&gt;', '>' -replace'<table>', '<table id="PrinterTable">'
 
@@ -612,6 +612,7 @@ finally {
 }
 
 #endregion
+
 
 
 
