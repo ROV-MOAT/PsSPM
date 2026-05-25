@@ -31,7 +31,7 @@
 | **Lexmark** | MX611de, MX622ade |
 | **Kyocera** | ECOSYS MA4500fx, ECOSYS PA3500cx |
 
-> Need another model? See [Adding a New Printer](#-adding-a-new-printer).
+> Need another model? See [Adding a New Printer](#-adding-a-new-printer-model).
 
 ---
 
