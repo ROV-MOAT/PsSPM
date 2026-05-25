@@ -1,23 +1,47 @@
-Powershell SNMP Printer Monitoring and Reporting Script. <br>
-<p align="center"><img src="https://github.com/ROV-MOAT/PsSPM/blob/main/PsSPM.png"/></p>
+# PsSPM - Printer Status Monitoring via SNMP
 
-C# SNMP Library is used - https://github.com/lextudio/sharpsnmplib <br>
-<br>
-Checks printer status via SNMP and generates CSV, HTML report with toner levels, counters, and information. Sending a report by email.
-Interface Mode - Console, FullGui(WPF). <br>
+[![PowerShell](https://img.shields.io/badge/PowerShell-5.1+-blue.svg)](https://github.com/PowerShell/PowerShell)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![SharpSnmpLib](https://img.shields.io/badge/SNMP-SharpSnmpLib-orange.svg)](https://github.com/lextudio/sharpsnmplib)
 
-You can query any printer, you need to change/add the model and OID in the file "Lib\PsSPM_oid.psd1", and change/add the value in the table "$modelPatterns".
+**PsSPM** is a PowerShell-based tool for monitoring printer status via SNMP. It checks toner levels, page counters, device information, and generates CSV/HTML reports. The tool supports both **Console** and **Full GUI (WPF)** modes, with optional email reporting.
 
-Example for console: <br>
-powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.5b\IP\*.txt <br>
-powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.5b\IP\*.txt -MailSend $false -MailUser User -MailPass Pass <br>
-powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode FullGui <br>
+> **SNMP Library used:** [SharpSnmpLib](https://github.com/lextudio/sharpsnmplib)
 
-Sending a letter is convenient to use in Console mode, there are no mail settings in the GUI. <br>
-Be careful not to store your account password in a script.
+---
 
-Support: <br>
-Xerox - C400/405, C600/605, B400, B600/B605/B610, 3330, 3325, 3655, 8045, 7025, 6510, 6600, 6700 <br>
-HP - M402, M428, M252n | T790/730 - dummy <br>
-Lexmark - MX611de, MX622ade <br>
-Kyocera - ECOSYS MA4500fx, ECOSYS PA3500cx
+## ✨ Features
+
+- ✅ Query any SNMP-enabled printer
+- 📊 Generate **CSV** and **HTML** reports (toner levels, counters, device info)
+- 📧 Send reports via email (Console mode only)
+- 🖥️ Two interface modes:
+  - **Console** – for automation and scripting
+  - **FullGui** – WPF-based interactive GUI
+- 🔧 Easily extendable – add new printer models and OIDs
+
+---
+
+## 📦 Supported Printers (Partial List)
+
+| Brand    | Models |
+|----------|--------|
+| **Xerox** | C400/405, C600/605, B400, B600/B605/B610, 3330, 3325, 3655, 8045, 7025, 6510, 6600, 6700 |
+| **HP**    | M402, M428, M252n, T790/730 (dummy) |
+| **Lexmark** | MX611de, MX622ade |
+| **Kyocera** | ECOSYS MA4500fx, ECOSYS PA3500cx |
+
+> Need another model? See [Adding a New Printer](#-adding-a-new-printer).
+
+---
+
+## 🚀 Usage Examples
+
+### Console Mode
+
+```powershell
+# Basic console mode with IP list file
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.5b\IP*.txt
+
+# Console mode with email sending (custom user/pass)
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.5b\IP*.txt -MailSend $false -MailUser User -MailPass Pass
