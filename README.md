@@ -46,6 +46,14 @@ powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\P
 # Console mode with email sending (custom user/pass)
 powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.6b\IP*.txt -MailSend $false -MailUser User -MailPass Pass
 ```
+### Full GUI Mode
+
+```powershell
+powershell.exe -File .\PsSPM_0.3.5b.ps1 -InterfaceMode FullGui
+```
+
+Note: Email settings are only available in Console mode (no mail configuration in GUI).
+
 ---
 
 ## ⚙️ Configuration
