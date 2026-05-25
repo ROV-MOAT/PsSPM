@@ -45,8 +45,7 @@ powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\P
 
 # Console mode with email sending (custom user/pass)
 powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.6b\IP*.txt -MailSend $false -MailUser User -MailPass Pass
-
----
+```
 ---
 
 ## ⚙️ Configuration
@@ -57,8 +56,6 @@ Add your printer model and corresponding OIDs
 
 Edit the $modelPatterns table in the main script to include pattern matching for your model
 
----
-
 ## 🛠️ Requirements
 Windows PowerShell 5.1 or PowerShell 7+
 
@@ -66,9 +63,5 @@ SNMP enabled on target printers
 
 .NET Framework 4.7.2+ (for WPF GUI)
 
----
-
 ## 📄 License
 This project is licensed under the MIT License – see the LICENSE file for details.
-
----
