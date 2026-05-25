@@ -10,6 +10,17 @@
 
 ---
 
+## ⚠️ First-Time Setup
+
+Before running the script, you may need to allow PowerShell script execution:
+
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+This enables running local scripts while keeping security for remote scripts.
+```
+
+---
+
 ## ✨ Features
 
 - ✅ Query any SNMP-enabled printer
