@@ -56,12 +56,16 @@ Add your printer model and corresponding OIDs
 
 Edit the $modelPatterns table in the main script to include pattern matching for your model
 
+---
+
 ## 🛠️ Requirements
 Windows PowerShell 5.1 or PowerShell 7+
 
 SNMP enabled on target printers
 
 .NET Framework 4.7.2+ (for WPF GUI)
+
+---
 
 ## 📄 License
 This project is licensed under the MIT License – see the LICENSE file for details.
