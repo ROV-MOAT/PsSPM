@@ -49,10 +49,9 @@ powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\P
 ---
 
 ## ⚙️ Configuration
-Adding a New Printer Model
-Open Lib\PsSPM_oid.psd1
+Adding a New Printer Model:
 
-Add your printer model and corresponding OIDs
+Open Lib\PsSPM_oid.psd1 - Add your printer model and corresponding OIDs
 
 Edit the $modelPatterns table in the main script to include pattern matching for your model
 
