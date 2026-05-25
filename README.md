@@ -47,6 +47,7 @@ powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\P
 powershell.exe -File .\PsSPM_0.3.6b.ps1 -InterfaceMode Console -ConsoleFile D:\PsSPM_0.3.6b\IP*.txt -MailSend $false -MailUser User -MailPass Pass
 
 ---
+---
 
 ## ⚙️ Configuration
 Adding a New Printer Model
@@ -71,6 +72,3 @@ SNMP enabled on target printers
 This project is licensed under the MIT License – see the LICENSE file for details.
 
 ---
-
-## 🙏 Acknowledgements
-SharpSnmpLib – SNMP library for .NET
