@@ -206,9 +206,42 @@ $Global:FinalHtml = @"
         0% { opacity: 1; }
         100% { opacity: 0; display: none; }
     }
+    
+    #scrollToTopBtn {
+        position: fixed;
+        bottom: 40px;
+        right: 10px;
+        width: 30px;
+        height: 30px;
+        background-color: #6d8196;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        z-index: 1000;
+        /* Плавное появление */
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease-in-out;
+    }
+        
+    #scrollToTopBtn.show {
+        opacity: 1;
+        visibility: visible;
+
+    }
+        
+    #scrollToTopBtn:hover {
+        color: #FFDE21;
+        transform: translateY(-5px);
+    }
 </style>
 </head>
 <body>
+<button id="scrollToTopBtn" title="Up">↑</button>
 <div class="fixed-header">
     <i style="color: white; margin-right: 5px;" class="fa-solid fa-print"></i>
     <span style="color: white; font-size: 14px;">This page was automatically generated $(Get-Date) by PowerShell SNMP printer monitoring (<a style='text-decoration: none; color: white;' href='https://github.com/ROV-MOAT/PsSPM' target='_blank'>PsSPM</a>).</span>
@@ -314,36 +347,58 @@ document.addEventListener('DOMContentLoaded', () => {
         summary.textContent = "Printers: " + visible + " of " + rowCache.length;
     };
 
-    const filter = () => {
+    function runChunkedFilter(activeFilters) {
+        const keys = Object.keys(activeFilters);
+        const size = 400;
+        let index = 0;
+
+        function processChunk() {
+            const end = Math.min(index + size, rowCache.length);
+
+            for (let i = index; i < end; i++) {
+                const { tr, cache } = rowCache[i];
+                let hide = false;
+
+                for (const k of keys) {
+                    if (!cache[k].includes(activeFilters[k])) {
+                        hide = true;
+                        break;
+                    }
+                }
+
+                tr.hidden = hide;
+            }
+
+            index = end;
+
+            if (index < rowCache.length) {
+                requestAnimationFrame(processChunk);
+            } else {
+                updateSticky();
+                updateSummary();
+            }
+        }
+
+        requestAnimationFrame(processChunk);
+    }
+
+    function filterChunked() {
         const active = {};
         filters.forEach(f => {
             const v = norm(f.value);
             if (v) active[f.dataset.filter] = v;
         });
+
         const keys = Object.keys(active);
 
         if (!keys.length) {
-            // быстрый путь: нет фильтров — показываем всё
-            for (const { tr } of rowCache) tr.hidden = false;
-            updateSticky();
+            rowCache.forEach(({ tr }) => tr.hidden = false);
             updateSummary();
             return;
         }
 
-        for (const { tr, cache } of rowCache) {
-            let hide = false;
-            for (const k of keys) {
-                const val = cache[k];
-                if (!val || !val.includes(active[k])) {
-                    hide = true;
-                    break;
-                }
-            }
-            tr.hidden = hide;
-        }
-        updateSticky();
-        updateSummary();
-    };
+        runChunkedFilter(active);
+    }
 
     const debounce = (fn, d = 350) => {
         let t;
@@ -353,14 +408,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    const applyFilter = debounce(filter);
+    const applyFilter = debounce(filterChunked, 350);
 
     filters.forEach(f => f.addEventListener('input', applyFilter));
-
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             filters.forEach(f => f.value = '');
-            filter();
+            filterChunked();
         }
     });
 
@@ -510,6 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
         a.remove();
         URL.revokeObjectURL(url);
     });
+
+    window.addEventListener('scroll', () => { scrollToTopBtn.classList.toggle('show', window.scrollY > 300); });
+    scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
     window.addEventListener('load', updateSticky);
     window.addEventListener('resize', updateSticky);
