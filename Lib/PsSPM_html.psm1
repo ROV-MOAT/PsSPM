@@ -365,10 +365,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     }
                 }
-
                 tr.hidden = hide;
             }
-
             index = end;
 
             if (index < rowCache.length) {
@@ -378,7 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateSummary();
             }
         }
-
         requestAnimationFrame(processChunk);
     }
 
@@ -514,16 +511,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (const { tr } of rowCache) {
             for (const idx of Object.values(cols)) {
-                const c = tr.children[idx];
-                if (!c) continue;
-                c.style.cursor = 'copy';
-                c.title = 'Click to copy';
-                c.addEventListener('click', () => {
-                    const txt = c.textContent.trim();
+                const cell = tr.children[idx];
+                if (!cell) continue;
+
+                const txt = cell.textContent.trim();
+                if (!txt) continue;
+
+                cell.style.cursor = 'copy';
+                cell.title = 'Click to copy';
+                cell.addEventListener('click', () => {
                     navigator.clipboard.writeText(txt).then(() => {
-                        const old = c.textContent;
-                        c.textContent = 'Copied!';
-                        setTimeout(() => c.textContent = old, 800);
+                        const old = cell.textContent;
+                        cell.textContent = 'Copied!';
+                        cell.style.backgroundColor = '#e8f5e9';
+                        setTimeout(() => {
+                            cell.textContent = old;
+                            cell.style.backgroundColor = '';
+                        }, 800);
                     });
                 });
             }
