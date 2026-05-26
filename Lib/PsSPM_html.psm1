@@ -315,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const norm = v => (v || '').toString().toLowerCase();
 
-    // карта колонок по data-column
     const colMap = (() => {
         const map = {};
         table.querySelectorAll('thead th')
@@ -327,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return map;
     })();
 
-    // кеш: по каждой строке — нормализованные значения по фильтруемым колонкам
     const rowCache = rows.map(tr => {
         const cells = tr.children;
         const cache = {};
@@ -541,7 +539,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const allRows = table.querySelectorAll('tr');
         allRows.forEach((r, i) => {
             if (r.classList?.contains('filter-row')) return;
-            //if (i === 1) return; // пропуск строки фильтров
             if (r.hidden) return;
 
             html += '<tr>';
