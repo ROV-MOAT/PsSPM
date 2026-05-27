@@ -76,6 +76,11 @@ $Global:FinalHtml = @"
         cursor: pointer;
         text-align: left;
         font-size: 14px;
+        transition: color 0.3s ease;
+    }
+
+    .btn-export:hover {
+        color: #FFDE21;
     }
 
     .btn-toggle-filters {
@@ -87,6 +92,7 @@ $Global:FinalHtml = @"
         cursor: pointer;
         text-align: left;
         font-size: 14px;
+        transition: color 0.3s ease;
     }
 
     .filter-row th {
@@ -334,11 +340,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const updateSummary = () => {
-        let visible = 0;
-        for (const { tr } of rowCache) {
-            if (!tr.hidden) visible++;
-        }
+        if (!summary) return;
 
+        const visible = rowCache.reduce((count, { tr }) => count + (tr.hidden ? 0 : 1), 0);
         summary.textContent = "Printers: " + visible + " of " + rowCache.length;
     };
 
@@ -386,9 +390,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!keys.length) {
             rowCache.forEach(({ tr }) => tr.hidden = false);
             updateSummary();
+            updateSticky();
             return;
         }
-
         runChunkedFilter(active);
     }
 
@@ -424,20 +428,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector('.spacer-div').style.marginTop = divH + 'px';
 
-        headRows[0].querySelectorAll('th').forEach(th => {
-            th.style.position = 'sticky';
-            th.style.top      = divH + 'px';
-            th.style.zIndex   = '15';
-            th.style.background = '#6d8196';
-        });
-
-        if (headRows[1]) {
-            headRows[1].querySelectorAll('th').forEach(th => {
-                th.style.position = 'sticky';
-                th.style.top      = (divH + firstH) + 'px';
-                th.style.zIndex   = '10';
-                th.style.background = 'white';
+        const setStickyStyles = (headers, top, zIndex, bg) => {
+            headers.forEach(th => {
+                Object.assign(th.style, {
+                    position: 'sticky',
+                    top: top,
+                    zIndex: zIndex,
+                    background: bg
+                });
             });
+        };
+
+        setStickyStyles(headRows[0].querySelectorAll('th'), divH + 'px', '15', '#6d8196');
+        if (headRows[1]) {
+            setStickyStyles(headRows[1].querySelectorAll('th'), (divH + firstH) + 'px', '10', 'white');
         }
 
         document.documentElement.style.scrollPaddingTop = divH + firstH + secondH + 'px';
