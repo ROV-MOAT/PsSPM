@@ -91,7 +91,7 @@ Edit the $modelPatterns table in the main script to include pattern matching for
 ---
 
 ## 🛠️ Requirements
-Windows PowerShell 5.1 or PowerShell 7+
+Windows PowerShell 5+
 
 SNMP enabled on target printers
 
