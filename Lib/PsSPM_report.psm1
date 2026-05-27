@@ -121,25 +121,25 @@ function Add-HtmlPrinterRowString {
     } else { "" }
 
     $row = @"
-<tr>
-  <td><a class='printer-link' href='http://$PrinterIP' target='_blank'>$PrinterIP</a></td>
-  <td>$(Format-Status -TcpStatus $TcpStatus)</td>
-  <td><a class='printer-link' href='http://$PrinterIP' target='_blank'>$($Collector.PrinterData.PName)</a></td>
-  <td><span>$(Format-Value $Collector.PrinterData.PMac)</span></td>
-  <td>$(Format-Value $Collector.PrinterData.Model)</td>
-  <td><span>$(Format-Value $Collector.PrinterData.Serial)</span></td>
-  <td>$(Format-Value $Collector.PrinterData.BlackCount)</td>
-  <td>$(Format-Value $Collector.PrinterData.ColorCount)</td>
-  <td>$(Format-Value $Collector.PrinterData.TotalCount)</td>
-  <td>$cToner</td>
-  <td>$mToner</td>
-  <td>$yToner</td>
-  <td>$kToner</td>
-  <td>$drum</td>
-  <td>$displayCell</td>
-  <td>$statusCell</td>
-  <td>$errorCell</td>
-</tr>
+        <tr>
+            <td><a class='printer-link' href='http://$PrinterIP' target='_blank'>$PrinterIP</a></td>
+            <td>$(Format-Status -TcpStatus $TcpStatus)</td>
+            <td><a class='printer-link' href='http://$PrinterIP' target='_blank'>$($Collector.PrinterData.PName)</a></td>
+            <td><span>$(Format-Value $Collector.PrinterData.PMac)</span></td>
+            <td>$(Format-Value $Collector.PrinterData.Model)</td>
+            <td><span>$(Format-Value $Collector.PrinterData.Serial)</span></td>
+            <td>$(Format-Value $Collector.PrinterData.BlackCount)</td>
+            <td>$(Format-Value $Collector.PrinterData.ColorCount)</td>
+            <td>$(Format-Value $Collector.PrinterData.TotalCount)</td>
+            <td>$cToner</td>
+            <td>$mToner</td>
+            <td>$yToner</td>
+            <td>$kToner</td>
+            <td>$drum</td>
+            <td>$displayCell</td>
+            <td>$statusCell</td>
+            <td>$errorCell</td>
+        </tr>
 "@
 
     $DataHtmlReport.Add($row) | Out-Null

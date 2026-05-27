@@ -91,7 +91,7 @@ $Global:FinalHtml = @"
 
     .filter-row th {
         padding: 4px;
-        background-color: transparent;
+        background-color: white;
         cursor: default;
     }
 
@@ -219,10 +219,7 @@ $Global:FinalHtml = @"
         border-radius: 3px;
         cursor: pointer;
         font-size: 14px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         z-index: 1000;
-        /* Плавное появление */
         opacity: 0;
         visibility: hidden;
         transition: all 0.3s ease-in-out;
@@ -295,7 +292,7 @@ $Global:FinalHtml = @"
         </tr>
     </thead>
     <tbody>
-        $HtmlBody
+    $HtmlBody
     </tbody>
 </table>
 $ExBottom
@@ -443,8 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        document.documentElement.style.scrollPaddingTop =
-            divH + firstH + secondH + 'px';
+        document.documentElement.style.scrollPaddingTop = divH + firstH + secondH + 'px';
     };
 
     btnFilter.addEventListener('click', () => {
@@ -469,9 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fontSize: '13px',
             zIndex: 9999,
             pointerEvents: 'none',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
             border: '1px solid rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(10px)',
             whiteSpace: 'nowrap'
         });
 
