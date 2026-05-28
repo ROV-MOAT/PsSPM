@@ -314,302 +314,334 @@ $Global:FinalHtml = @"
 $ExBottom
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        // ============================== DOM Elements ==============================
+        const table = document.getElementById('reportTable');
+        const tbody = table.querySelector('tbody');
+        const summary = document.getElementById('summaryText');
+        const filters = document.querySelectorAll('[data-filter]');
+        const rowFilter = document.getElementById('rowFilter');
+        const btnFilter = document.getElementById('btnToggleFilter');
+        const btnExport = document.getElementById('btnExportExcel');
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+        
+        let followToast = null;
 
-    const table      = document.getElementById('reportTable');
-    const tbody      = table.querySelector('tbody');
-    const summary    = document.getElementById('summaryText');
-    const filters    = document.querySelectorAll('[data-filter]');
-    const rowFilter  = document.getElementById('rowFilter');
-    const btnFilter  = document.getElementById('btnToggleFilter');
-    const btnExport  = document.getElementById('btnExportExcel');
-    const rows       = [...tbody.querySelectorAll('tr')];
-    let followToast  = null;
+        // ============================== Helpers ==============================
+        const normalize = (value) => (value || '').toString().toLowerCase();
 
-    const norm = v => (v || '').toString().toLowerCase();
-
-    const colMap = (() => {
-        const map = {};
-        table.querySelectorAll('thead th')
-            .forEach((th, i) => {
+        // ============================== Column Mapping ==============================
+        const columnMap = (() => {
+            const map = {};
+            table.querySelectorAll('thead th').forEach((th, index) => {
                 if (th.hasAttribute('data-column')) {
-                    map[th.dataset.column] = i;
+                    map[th.dataset.column] = index;
                 }
-        });
-        return map;
-    })();
-
-    const rowCache = rows.map(tr => {
-        const cells = tr.children;
-        const cache = {};
-        for (const [field, idx] of Object.entries(colMap)) {
-            const cell = cells[idx];
-            cache[field] = cell ? norm(cell.textContent) : '';
-        }
-        return { tr, cache };
-    });
-
-    const updateSummary = () => {
-        if (!summary) return;
-
-        const visible = rowCache.reduce((count, { tr }) => count + (tr.hidden ? 0 : 1), 0);
-        summary.textContent = "Printers: " + visible + " of " + rowCache.length;
-    };
-
-    function runChunkedFilter(activeFilters) {
-        const keys = Object.keys(activeFilters);
-        const size = 400;
-        let index = 0;
-
-        function processChunk() {
-            const end = Math.min(index + size, rowCache.length);
-
-            for (let i = index; i < end; i++) {
-                const { tr, cache } = rowCache[i];
-                let hide = false;
-
-                for (const k of keys) {
-                    if (!cache[k].includes(activeFilters[k])) {
-                        hide = true;
-                        break;
-                    }
-                }
-                tr.hidden = hide;
-            }
-            index = end;
-
-            if (index < rowCache.length) {
-                requestAnimationFrame(processChunk);
-            } else {
-                updateSticky();
-                updateSummary();
-            }
-        }
-        requestAnimationFrame(processChunk);
-    }
-
-    function filterChunked() {
-        const active = {};
-        filters.forEach(f => {
-            const v = norm(f.value);
-            if (v) active[f.dataset.filter] = v;
-        });
-
-        const keys = Object.keys(active);
-
-        if (!keys.length) {
-            rowCache.forEach(({ tr }) => tr.hidden = false);
-            updateSummary();
-            updateSticky();
-            return;
-        }
-        runChunkedFilter(active);
-    }
-
-    const debounce = (fn, d = 350) => {
-        let t;
-        return (...a) => {
-            clearTimeout(t);
-            t = setTimeout(() => fn(...a), d);
-        };
-    };
-
-    const applyFilter = debounce(filterChunked, 350);
-
-    filters.forEach(f => f.addEventListener('input', applyFilter));
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            filters.forEach(f => f.value = '');
-            filterChunked();
-        }
-    });
-
-    const updateSticky = () => {
-        const fixed = document.querySelector('.fixed-header');
-        const thead = table.querySelector('thead');
-        if (!fixed || !thead) return;
-
-        const headRows = [...thead.rows];
-        if (!headRows.length) return;
-
-        const divH    = fixed.offsetHeight;
-        const firstH  = headRows[0].offsetHeight;
-        const secondH = headRows[1]?.offsetHeight || 0;
-
-        document.querySelector('.spacer-div').style.marginTop = divH + 'px';
-
-        const setStickyStyles = (headers, top, zIndex, bg) => {
-            headers.forEach(th => {
-                Object.assign(th.style, {
-                    position: 'sticky',
-                    top: top,
-                    zIndex: zIndex,
-                    background: bg
-                });
             });
+            return map;
+        })();
+
+        // ============================== Row Cache ==============================
+        const rows = [...tbody.querySelectorAll('tr')];
+        const rowCache = rows.map(row => {
+            const cells = row.children;
+            const cache = {};
+            for (const [field, index] of Object.entries(columnMap)) {
+                const cell = cells[index];
+                cache[field] = cell ? normalize(cell.textContent) : '';
+            }
+            return { row, cache };
+        });
+
+        // ============================== Summary Update ==============================
+        const updateSummary = () => {
+            if (!summary) return;
+            const visibleCount = rowCache.reduce((count, { row }) => count + (row.hidden ? 0 : 1), 0);
+            summary.textContent = 'Printers: ' + visibleCount + ' of ' + rowCache.length;
         };
 
-        setStickyStyles(headRows[0].querySelectorAll('th'), divH + 'px', '15', '#6d8196');
-        if (headRows[1]) {
-            setStickyStyles(headRows[1].querySelectorAll('th'), (divH + firstH) + 'px', '10', 'white');
-        }
+        // ============================== Chunked Filtering ==============================
+        const runChunkedFilter = (activeFilters) => {
+            const filterKeys = Object.keys(activeFilters);
+            const chunkSize = 400;
+            let currentIndex = 0;
 
-        document.documentElement.style.scrollPaddingTop = divH + firstH + secondH + 'px';
-    };
+            const processChunk = () => {
+                const endIndex = Math.min(currentIndex + chunkSize, rowCache.length);
 
-    const createToast = () => {
-        const toast = document.createElement('div');
-        Object.assign(toast.style, {
-            position: 'fixed',
-            background: '#6d8196',
-            color: '#fff',
-            padding: '8px',
-            borderRadius: '3px',
-            fontSize: '13px',
-            zIndex: 9999,
-            pointerEvents: 'none',
-            border: '1px solid rgba(255,255,255,0.1)',
-            whiteSpace: 'nowrap',
-            transition: 'opacity 0.15s ease',
-            opacity: '0'
-        });
-        document.body.appendChild(toast);
-        return toast;
-    };
+                for (let i = currentIndex; i < endIndex; i++) {
+                    const { row, cache } = rowCache[i];
+                    let shouldHide = false;
 
-    const positionToast = (e, toast) => {
-        const w = toast.offsetWidth;
-        const h = toast.offsetHeight;
-        
-        let x = e.clientX - w - 10;
-        let y = e.clientY + 10;
-        
-        if (x < 5) x = e.clientX + 15;
-        if (y < 5) y = 5;
-        if (y + h > innerHeight - 5) y = innerHeight - h - 5;
-        
-        toast.style.left = x + 'px';
-        toast.style.top = y + 'px';
-    };
+                    for (const key of filterKeys) {
+                        if (!cache[key].includes(activeFilters[key])) {
+                            shouldHide = true;
+                            break;
+                        }
+                    }
+                    row.hidden = shouldHide;
+                }
 
-    const showToast = (e, msg) => {
-        if (!followToast) {
-            followToast = createToast();
-        }
-        
-        followToast.innerHTML = msg;
-        followToast.style.opacity = '1';
-        positionToast(e, followToast);
-    };
+                currentIndex = endIndex;
 
-    const hideToast = () => {
-        if (followToast) {
-            followToast.style.opacity = '0';
-        }
-    };
+                if (currentIndex < rowCache.length) {
+                    requestAnimationFrame(processChunk);
+                } else {
+                    updateSticky();
+                    updateSummary();
+                }
+            };
 
-    document.querySelectorAll('[data-message]').forEach(el => {
-        el.style.cursor = 'help';
-        
-        el.addEventListener('mouseenter', (e) => showToast(e, el.dataset.message));
-        el.addEventListener('mousemove', (e) => {
-            if (followToast && followToast.style.opacity === '1') {
-                positionToast(e, followToast);
+            requestAnimationFrame(processChunk);
+        };
+
+        const filterChunked = () => {
+            const active = {};
+            filters.forEach(filter => {
+                const value = normalize(filter.value);
+                if (value) {
+                    active[filter.dataset.filter] = value;
+                }
+            });
+
+            const filterKeys = Object.keys(active);
+
+            if (filterKeys.length === 0) {
+                rowCache.forEach(({ row }) => row.hidden = false);
+                updateSummary();
+                updateSticky();
+                return;
+            }
+
+            runChunkedFilter(active);
+        };
+
+        // ============================== Debounce ==============================
+        const debounce = (func, delay = 350) => {
+            let timeoutId;
+            return (...args) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func(...args), delay);
+            };
+        };
+
+        const applyFilter = debounce(filterChunked, 350);
+
+        // ============================== Filter Event Listeners ==============================
+        filters.forEach(filter => filter.addEventListener('input', applyFilter));
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                filters.forEach(filter => filter.value = '');
+                filterChunked();
             }
         });
-        el.addEventListener('mouseleave', hideToast);
-    });
 
-    const markCopyable = () => {
-        const cols = {};
-        table.querySelectorAll('th[data-column]').forEach((th, i) => {
-            const col = th.dataset.column;
-            if (col === 'mac' || col === 'serial') cols[col] = i;
-        });
+        // ============================== Sticky Header ==============================
+        const updateSticky = () => {
+            const fixedHeader = document.querySelector('.fixed-header');
+            const thead = table.querySelector('thead');
+            if (!fixedHeader || !thead) return;
 
-        for (const { tr } of rowCache) {
-            for (const idx of Object.values(cols)) {
-                const cell = tr.children[idx];
-                if (!cell) continue;
+            const headerRows = [...thead.rows];
+            if (headerRows.length === 0) return;
 
-                const txt = cell.textContent.trim();
-                if (!txt) continue;
+            const fixedHeight = fixedHeader.offsetHeight;
+            const firstRowHeight = headerRows[0].offsetHeight;
+            const secondRowHeight = headerRows[1]?.offsetHeight || 0;
 
-                cell.style.cursor = 'copy';
-                cell.title = 'Click to copy';
-                cell.addEventListener('click', () => {
-                    navigator.clipboard.writeText(txt).then(() => {
-                        const old = cell.textContent;
-                        cell.textContent = 'Copied!';
-                        cell.style.backgroundColor = '#e8f5e9';
-                        setTimeout(() => {
-                            cell.textContent = old;
-                            cell.style.backgroundColor = '';
-                        }, 800);
+            const spacerDiv = document.querySelector('.spacer-div');
+            if (spacerDiv) {
+                spacerDiv.style.marginTop = fixedHeight + 'px';
+            }
+
+            const setStickyStyles = (headers, topPosition, zIndexValue, backgroundColor) => {
+                headers.forEach(header => {
+                    Object.assign(header.style, {
+                        position: 'sticky',
+                        top: topPosition,
+                        zIndex: zIndexValue,
+                        background: backgroundColor
                     });
                 });
+            };
+
+            const firstRowHeaders = headerRows[0].querySelectorAll('th');
+            setStickyStyles(firstRowHeaders, fixedHeight + 'px', '15', '#6d8196');
+
+            if (headerRows[1]) {
+                const secondRowHeaders = headerRows[1].querySelectorAll('th');
+                const topPosition = (fixedHeight + firstRowHeight) + 'px';
+                setStickyStyles(secondRowHeaders, topPosition, '10', 'white');
             }
-        }
-    };
 
+            document.documentElement.style.scrollPaddingTop = (fixedHeight + firstRowHeight + secondRowHeight) + 'px';
+        };
 
-    btnFilter.addEventListener('click', () => {
-        rowFilter.classList.toggle('visible');
-        btnFilter.style.color = rowFilter.classList.contains('visible') ? '#FFDE21' : 'white';
-        updateSticky();
-    });
+        // ============================== Toast Notifications ==============================
+        const createToast = () => {
+            const toast = document.createElement('div');
+            Object.assign(toast.style, {
+                position: 'fixed',
+                background: '#6d8196',
+                color: '#fff',
+                padding: '8px',
+                borderRadius: '3px',
+                fontSize: '13px',
+                zIndex: 9999,
+                pointerEvents: 'none',
+                border: '1px solid rgba(255,255,255,0.1)',
+                whiteSpace: 'nowrap',
+                transition: 'opacity 0.15s ease',
+                opacity: '0'
+            });
+            document.body.appendChild(toast);
+            return toast;
+        };
 
-    btnExport.addEventListener('click', () => {
-        const skip = [14, 15, 16]; // column index
-        let html = '<html><head><meta charset="UTF-8"><style>td,th{mso-number-format:"\\@"; text-align:"center"; vertical-align:"middle";}</style></head><body><table border="1">';
+        const positionToast = (event, toast) => {
+            const toastWidth = toast.offsetWidth;
+            const toastHeight = toast.offsetHeight;
+            
+            let leftPosition = event.clientX - toastWidth - 10;
+            let topPosition = event.clientY + 10;
+            
+            if (leftPosition < 5) leftPosition = event.clientX + 15;
+            if (topPosition < 5) topPosition = 5;
+            if (topPosition + toastHeight > window.innerHeight - 5) {
+                topPosition = window.innerHeight - toastHeight - 5;
+            }
+            
+            toast.style.left = leftPosition + 'px';
+            toast.style.top = topPosition + 'px';
+        };
 
-        const allRows = table.querySelectorAll('tr');
-        allRows.forEach((r, i) => {
-            if (r?.id === 'rowFilter') return;
-            if (r.hidden) return;
+        const showToast = (event, message) => {
+            if (!followToast) {
+                followToast = createToast();
+            }
+            followToast.innerHTML = message;
+            followToast.style.opacity = '1';
+            positionToast(event, followToast);
+        };
 
-            html += '<tr>';
-            const cells = r.querySelectorAll('td,th');
-            cells.forEach((c, idx) => {
-                if (!skip.includes(idx)) {
-                    const tag = i === 0 ? 'th' : 'td';
-                    html += '<' + tag + '>' + c.textContent + '</' + tag + '>';
+        const hideToast = () => {
+            if (followToast) {
+                followToast.style.opacity = '0';
+            }
+        };
+
+        // ============================== Tooltips ==============================
+        document.querySelectorAll('[data-message]').forEach(element => {
+            element.style.cursor = 'help';
+            
+            element.addEventListener('mouseenter', (event) => showToast(event, element.dataset.message));
+            element.addEventListener('mousemove', (event) => {
+                if (followToast && followToast.style.opacity === '1') {
+                    positionToast(event, followToast);
                 }
             });
-            html += '</tr>';
+            element.addEventListener('mouseleave', hideToast);
         });
 
-        html += '</table></body></html>';
+        // ============================== Copy to Clipboard ==============================
+        const markCopyable = () => {
+            const copyableColumns = {};
+            table.querySelectorAll('th[data-column]').forEach((th, index) => {
+                const column = th.dataset.column;
+                if (column === 'mac' || column === 'serial') {
+                    copyableColumns[column] = index;
+                }
+            });
 
-        const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
-        const url  = URL.createObjectURL(blob);
-        const a    = Object.assign(document.createElement('a'), {
-            href: url,
-            download: 'PsSPM_Report.xls'
+            for (const { row } of rowCache) {
+                for (const columnIndex of Object.values(copyableColumns)) {
+                    const cell = row.children[columnIndex];
+                    if (!cell) continue;
+
+                    const cellText = cell.textContent.trim();
+                    if (!cellText) continue;
+
+                    cell.style.cursor = 'copy';
+                    cell.title = 'Click to copy';
+                    cell.addEventListener('click', () => {
+                        navigator.clipboard.writeText(cellText).then(() => {
+                            const originalText = cell.textContent;
+                            cell.textContent = 'Copied!';
+                            cell.style.backgroundColor = '#e8f5e9';
+                            setTimeout(() => {
+                                cell.textContent = originalText;
+                                cell.style.backgroundColor = '';
+                            }, 800);
+                        });
+                    });
+                }
+            }
+        };
+
+        // ============================== Filter Toggle Button ==============================
+        btnFilter.addEventListener('click', () => {
+            rowFilter.classList.toggle('visible');
+            btnFilter.style.color = rowFilter.classList.contains('visible') ? '#FFDE21' : 'white';
+            updateSticky();
         });
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    });
 
-    window.addEventListener('scroll', () => {
-        scrollToTopBtn.classList.toggle('show', window.scrollY > 300);
-    });
+        // ============================== Export to Excel ==============================
+        btnExport.addEventListener('click', () => {
+            const columnsToSkip = [14, 15, 16];
+            let htmlContent = '<html><head><meta charset="UTF-8"><style>td,th{mso-number-format:"\\@"; text-align:"center"; vertical-align:"middle";}</style></head><body><table border="1">';
 
-    scrollToTopBtn.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+            const allRows = table.querySelectorAll('tr');
+            allRows.forEach((row, index) => {
+                if (row?.id === 'rowFilter') return;
+                if (row.hidden) return;
+
+                htmlContent += '<tr>';
+                const cells = row.querySelectorAll('td, th');
+                cells.forEach((cell, cellIndex) => {
+                    if (!columnsToSkip.includes(cellIndex)) {
+                        const tagName = index === 0 ? 'th' : 'td';
+                        htmlContent += '<' + tagName + '>' + cell.textContent + '</' + tagName + '>';
+                    }
+                });
+                htmlContent += '</tr>';
+            });
+
+            htmlContent += '</table></body></html>';
+
+            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+            const blobUrl = URL.createObjectURL(blob);
+            const downloadLink = Object.assign(document.createElement('a'), {
+                href: blobUrl,
+                download: 'PsSPM_Report.xls'
+            });
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            downloadLink.remove();
+            URL.revokeObjectURL(blobUrl);
         });
+
+        // ============================== Scroll to Top Button ==============================
+        if (scrollToTopBtn) {
+            window.addEventListener('scroll', () => {
+                scrollToTopBtn.classList.toggle('show', window.scrollY > 300);
+            });
+
+            scrollToTopBtn.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // ============================== Initialization ==============================
+        window.addEventListener('load', updateSticky);
+        window.addEventListener('resize', updateSticky);
+
+        markCopyable();
+        updateSummary();
     });
-
-    window.addEventListener('load', updateSticky);
-    window.addEventListener('resize', updateSticky);
-
-    markCopyable();
-    updateSummary();
-});
 </script>
 </body>
 </html>
