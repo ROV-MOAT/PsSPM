@@ -196,6 +196,7 @@ $Global:FinalHtml = @"
     #btnExportExcel {
         width: fit-content;
         padding: 0 ;
+        margin-left: 5px;
         background: #6d8196;
         color: white;
         border: none;
@@ -212,6 +213,7 @@ $Global:FinalHtml = @"
     #btnToggleFilter {
         width: fit-content;
         padding: 0;
+        margin-left: auto;
         background-color: #6d8196;
         color: white;
         border: none;
@@ -254,12 +256,12 @@ $Global:FinalHtml = @"
 <body>
 <button id="scrollToTopBtn" title="Up">↑</button>
 <div class="fixed-header">
-    <i style="color: white; margin-right: 5px;" class="fa-solid fa-print"></i>
+    <i class="fa-solid fa-print" style="color: white; margin-right: 5px;"></i>
     <span style="color: white; font-size: 14px;">This page was automatically generated $(Get-Date) by PowerShell SNMP printer monitoring (<a style='text-decoration: none; color: white;' href='https://github.com/ROV-MOAT/PsSPM' target='_blank'>PsSPM</a>).</span>
-    <button id="btnToggleFilter" style="margin-left: auto;">
+    <button id="btnToggleFilter">
         <i class="fa-solid fa-magnifying-glass fa-lg"></i> Filter
     </button>
-    <button id="btnExportExcel" style="margin-left: 5px;">
+    <button id="btnExportExcel">
         <i class="fa-regular fa-file-excel fa-lg"></i> Export
     </button>
 </div>
@@ -558,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnExport.addEventListener('click', () => {
-        const skip = [14, 15, 16];
+        const skip = [14, 15, 16]; // column index
         let html = '<html><head><meta charset="UTF-8"><style>td,th{mso-number-format:"\\@"; text-align:"center"; vertical-align:"middle";}</style></head><body><table border="1">';
 
         const allRows = table.querySelectorAll('tr');
