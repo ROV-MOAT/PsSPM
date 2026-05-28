@@ -475,7 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return toast;
     };
 
-    // Позиционирование
     const positionToast = (e, toast) => {
         const w = toast.offsetWidth;
         const h = toast.offsetHeight;
@@ -491,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.style.top = y + 'px';
     };
 
-    // Показать toast
     const showToast = (e, msg) => {
         if (!followToast) {
             followToast = createToast();
@@ -502,14 +500,12 @@ document.addEventListener('DOMContentLoaded', () => {
         positionToast(e, followToast);
     };
 
-    // Скрыть toast
     const hideToast = () => {
         if (followToast) {
             followToast.style.opacity = '0';
         }
     };
 
-    // Навешиваем обработчики
     document.querySelectorAll('[data-message]').forEach(el => {
         el.style.cursor = 'help';
         
