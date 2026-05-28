@@ -455,18 +455,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.scrollPaddingTop = divH + firstH + secondH + 'px';
     };
 
-    btnFilter.addEventListener('click', () => {
-        rowFilter.classList.toggle('visible');
-        btnFilter.style.color = rowFilter.classList.contains('visible') ? '#FFDE21' : 'white';
-        updateSticky();
-    });
-
-    const showToast = (e, msg) => {
-        if (followToast) followToast.remove();
-
-        const t = document.createElement('div');
-        t.innerHTML = msg;
-        Object.assign(t.style, {
+    const createToast = () => {
+        const toast = document.createElement('div');
+        Object.assign(toast.style, {
             position: 'fixed',
             background: '#6d8196',
             color: '#fff',
@@ -476,32 +467,59 @@ document.addEventListener('DOMContentLoaded', () => {
             zIndex: 9999,
             pointerEvents: 'none',
             border: '1px solid rgba(255,255,255,0.1)',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            transition: 'opacity 0.15s ease',
+            opacity: '0'
         });
+        document.body.appendChild(toast);
+        return toast;
+    };
 
-        document.body.appendChild(t);
-
-        const w = t.offsetWidth, h = t.offsetHeight;
+    // Позиционирование
+    const positionToast = (e, toast) => {
+        const w = toast.offsetWidth;
+        const h = toast.offsetHeight;
+        
         let x = e.clientX - w - 10;
         let y = e.clientY + 10;
-
+        
         if (x < 5) x = e.clientX + 15;
         if (y < 5) y = 5;
         if (y + h > innerHeight - 5) y = innerHeight - h - 5;
-
-        t.style.left = x + 'px';
-        t.style.top  = y + 'px';
-
-        followToast = t;
+        
+        toast.style.left = x + 'px';
+        toast.style.top = y + 'px';
     };
 
+    // Показать toast
+    const showToast = (e, msg) => {
+        if (!followToast) {
+            followToast = createToast();
+        }
+        
+        followToast.innerHTML = msg;
+        followToast.style.opacity = '1';
+        positionToast(e, followToast);
+    };
+
+    // Скрыть toast
+    const hideToast = () => {
+        if (followToast) {
+            followToast.style.opacity = '0';
+        }
+    };
+
+    // Навешиваем обработчики
     document.querySelectorAll('[data-message]').forEach(el => {
         el.style.cursor = 'help';
-        el.addEventListener('mousemove', e => showToast(e, el.dataset.message));
-        el.addEventListener('mouseleave', () => {
-            if (followToast) followToast.remove();
-            followToast = null;
+        
+        el.addEventListener('mouseenter', (e) => showToast(e, el.dataset.message));
+        el.addEventListener('mousemove', (e) => {
+            if (followToast && followToast.style.opacity === '1') {
+                positionToast(e, followToast);
+            }
         });
+        el.addEventListener('mouseleave', hideToast);
     });
 
     const markCopyable = () => {
@@ -535,6 +553,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+
+
+    btnFilter.addEventListener('click', () => {
+        rowFilter.classList.toggle('visible');
+        btnFilter.style.color = rowFilter.classList.contains('visible') ? '#FFDE21' : 'white';
+        updateSticky();
+    });
 
     btnExport.addEventListener('click', () => {
         const skip = [14, 15, 16];
