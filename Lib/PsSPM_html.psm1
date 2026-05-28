@@ -12,7 +12,7 @@
 #region HTML Template
 $ExBottom = @"
 <div class="fixed-bottom">
-    <span style="color: white; font-size: 14px;" id="summaryText">Loading...</span>
+    <span id="summaryText" style="color: white; font-size: 14px;">Loading...</span>
     <span style="color: white; font-size: 12px; margin-left: auto;">$Version</span>
 </div>
 "@
@@ -67,41 +67,21 @@ $Global:FinalHtml = @"
         height: 30px;
     }
 
-    .btn-export {
-        width: fit-content;
-        padding: 0 ;
-        background: #6d8196;
-        color: white;
-        border: none;
-        cursor: pointer;
-        text-align: left;
-        font-size: 14px;
-        transition: color 0.3s ease;
+    #rowFilter {
+        display: none;
     }
 
-    .btn-export:hover {
-        color: #FFDE21;
+    #rowFilter.visible {
+        display: table-row;
     }
 
-    .btn-toggle-filters {
-        width: fit-content;
-        padding: 0;
-        background-color: #6d8196;
-        color: white;
-        border: none;
-        cursor: pointer;
-        text-align: left;
-        font-size: 14px;
-        transition: color 0.3s ease;
-    }
-
-    .filter-row th {
+    #rowFilter th {
         padding: 4px;
         background-color: white;
         cursor: default;
     }
 
-    .filter-row input {
+    #rowFilter input {
         width: 100%;
         padding: 4px;
         box-sizing: border-box;
@@ -111,7 +91,7 @@ $Global:FinalHtml = @"
         text-align: center;
     }
 
-    .filter-row input:focus {
+    #rowFilter input:focus {
         outline: none;
     }
 
@@ -213,6 +193,34 @@ $Global:FinalHtml = @"
         100% { opacity: 0; display: none; }
     }
     
+    #btnExportExcel {
+        width: fit-content;
+        padding: 0 ;
+        background: #6d8196;
+        color: white;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        font-size: 14px;
+        transition: color 0.3s ease;
+    }
+
+    #btnExportExcel:hover {
+        color: #FFDE21;
+    }
+
+    #btnToggleFilter {
+        width: fit-content;
+        padding: 0;
+        background-color: #6d8196;
+        color: white;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        font-size: 14px;
+        transition: color 0.3s ease;
+    }
+    
     #scrollToTopBtn {
         position: fixed;
         bottom: 40px;
@@ -248,10 +256,10 @@ $Global:FinalHtml = @"
 <div class="fixed-header">
     <i style="color: white; margin-right: 5px;" class="fa-solid fa-print"></i>
     <span style="color: white; font-size: 14px;">This page was automatically generated $(Get-Date) by PowerShell SNMP printer monitoring (<a style='text-decoration: none; color: white;' href='https://github.com/ROV-MOAT/PsSPM' target='_blank'>PsSPM</a>).</span>
-    <button style="margin-left: auto;"  id="btnToggleFilter" class="btn-toggle-filters">
+    <button id="btnToggleFilter" style="margin-left: auto;">
         <i class="fa-solid fa-magnifying-glass fa-lg"></i> Filter
     </button>
-    <button style="margin-left: 5px;" id="btnExportExcel" class="btn-export">
+    <button id="btnExportExcel" style="margin-left: 5px;">
         <i class="fa-regular fa-file-excel fa-lg"></i> Export
     </button>
 </div>
@@ -277,7 +285,7 @@ $Global:FinalHtml = @"
             <th><span style="color:#FFDE21">Active Alerts</span></th>
             <th data-column="errors"><span style="color:#FFDE21">E</span></th>
         </tr>
-        <tr id="rowFilter" class="filter-row" style="display: none;">
+        <tr id="rowFilter">
             <th><input type="text" data-filter="ip" value=""></th>
             <th></th>
             <th><input type="text" data-filter="name" value=""></th>
@@ -448,10 +456,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     btnFilter.addEventListener('click', () => {
-        const hidden = rowFilter.style.display === 'none';
-        rowFilter.style.display = hidden ? 'table-row' : 'none';
-        rowFilter.style.opacity = hidden ? '1' : '0';
-        btnFilter.style.color   = hidden ? '#FFDE21' : 'white';
+        rowFilter.classList.toggle('visible');
+        btnFilter.style.color = rowFilter.classList.contains('visible') ? '#FFDE21' : 'white';
         updateSticky();
     });
 
@@ -536,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const allRows = table.querySelectorAll('tr');
         allRows.forEach((r, i) => {
-            if (r.classList?.contains('filter-row')) return;
+            if (r?.id === 'rowFilter') return;
             if (r.hidden) return;
 
             html += '<tr>';
@@ -564,8 +570,16 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     });
 
-    window.addEventListener('scroll', () => { scrollToTopBtn.classList.toggle('show', window.scrollY > 300); });
-    scrollToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    window.addEventListener('scroll', () => {
+        scrollToTopBtn.classList.toggle('show', window.scrollY > 300);
+    });
+
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
 
     window.addEventListener('load', updateSticky);
     window.addEventListener('resize', updateSticky);
