@@ -68,11 +68,11 @@ $Global:FinalHtml = @"
     }
 
     #rowFilter {
-        display: none;
+        visibility: collapse;
     }
 
     #rowFilter.visible {
-        display: table-row;
+        visibility: visible;
     }
 
     #rowFilter th {
