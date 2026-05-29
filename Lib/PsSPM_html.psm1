@@ -677,7 +677,7 @@ $ExBottom
                         if (icon) {
                             const span = document.createElement('span');
                             span.textContent = emoji;
-                            span.style.cssText = margin ? 'margin-right: 5px;' : '';
+                            if (margin) span.style.marginRight = '5px';
 
                             icon.replaceWith(span);
                         }
