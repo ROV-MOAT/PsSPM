@@ -46,9 +46,11 @@ $Global:FinalHtml = @"
         z-index: 20;
         padding: 10px;
         border: 2px solid #ddd;
+        border-bottom: none;
         width: 100%;
         box-sizing: border-box;
         max-height: 300px;
+        align-items: center;
     }
 
     .fixed-bottom {
@@ -145,7 +147,6 @@ $Global:FinalHtml = @"
         padding: 0;
         margin: 0;
         max-width: 400px;
-        width: max-content;
         white-space: normal;
         word-wrap: break-word;
     }
@@ -196,7 +197,7 @@ $Global:FinalHtml = @"
     #btnExportExcel {
         width: fit-content;
         padding: 0 ;
-        margin-left: 5px;
+        margin-left: 10px;
         background: #6d8196;
         color: white;
         border: none;
@@ -237,6 +238,8 @@ $Global:FinalHtml = @"
         font-size: 14px;
         z-index: 1000;
         opacity: 0;
+        padding: 0;
+        margin: 0;
         visibility: hidden;
         transition: all 0.3s ease-in-out;
     }
@@ -254,15 +257,17 @@ $Global:FinalHtml = @"
 </style>
 </head>
 <body>
-<button id="scrollToTopBtn" title="Up">↑</button>
+<button id="scrollToTopBtn" title="Up">
+    <i class="fa-solid fa-angles-up fa-lg"></i>
+</button>
 <div class="fixed-header">
     <i class="fa-solid fa-print" style="color: white; margin-right: 5px;"></i>
     <span style="color: white; font-size: 14px;">This page was automatically generated $(Get-Date) by PowerShell SNMP printer monitoring (<a style='text-decoration: none; color: white;' href='https://github.com/ROV-MOAT/PsSPM' target='_blank'>PsSPM</a>).</span>
     <button id="btnToggleFilter">
-        <i class="fa-solid fa-magnifying-glass fa-lg"></i> Filter
+        <i class="fa-solid fa-magnifying-glass fa-lg" style="margin-right: 5px;"></i><span>Filter</span>
     </button>
     <button id="btnExportExcel">
-        <i class="fa-regular fa-file-excel fa-lg"></i> Export
+        <i class="fa-regular fa-file-excel fa-lg" style="margin-right: 5px;"></i><span>Export</span>
     </button>
 </div>
 <div class="spacer-div" style="margin-top: 40px;"></div>
@@ -357,7 +362,7 @@ $ExBottom
         const updateSummary = () => {
             if (!summary) return;
             const visibleCount = rowCache.reduce((count, { row }) => count + (row.hidden ? 0 : 1), 0);
-            summary.textContent = 'Printers: ' + visibleCount + ' of ' + rowCache.length;
+            summary.textContent = 'Rows: ' + visibleCount + ' of ' + rowCache.length;
         };
 
         // ============================== Chunked Filtering ==============================
@@ -635,10 +640,64 @@ $ExBottom
             });
         }
 
+        // ============================== Font Awesome Check ==============================
+        const hasFontAwesome = () => {
+            const testIcon = document.createElement('i');
+            testIcon.className = 'fas fa-home';
+            testIcon.style.cssText = 'position: absolute; visibility: visible; display: inline-block;';
+            document.body.appendChild(testIcon);
+            
+            const rect = testIcon.getBoundingClientRect();
+            const isEmpty = rect.width === 0 && rect.height === 0;
+            
+            testIcon.remove();
+            
+            return !isEmpty;
+        };
+        
+        // ============================== Universal Icon Handler ==============================
+        const initAllIcons = () => {
+            if (!hasFontAwesome()) {
+                document.querySelectorAll('#reportTable th').forEach(th => {
+                    const icon = th.querySelector('i');
+                    const span = th.querySelector('span');
+                    
+                    if (icon && span) {
+                        const text = span.textContent;
+                        icon.remove();
+                        span.insertAdjacentHTML('beforebegin', '📄 ');
+                    }
+                });
+                
+                const replaceIcons = (mappings) => {
+                    mappings.forEach(({ target, selector, emoji, margin = true }) => {
+                        const element = typeof target === 'string' ? document.querySelector(target) : target;
+                        const icon = element?.querySelector(selector);
+                        
+                        if (icon) {
+                            const span = document.createElement('span');
+                            span.textContent = emoji;
+                            span.style.cssText = margin ? 'margin-right: 5px;' : '';
+
+                            icon.replaceWith(span);
+                        }
+                    });
+                };
+
+                replaceIcons([
+                    { target: '.fixed-header', selector: '.fa-print', emoji: '🖨️' },
+                    { target: btnFilter, selector: '.fa-magnifying-glass', emoji: '🔍' },
+                    { target: btnExport, selector: '.fa-file-excel', emoji: '💾' },
+                    { target: scrollToTopBtn, selector: '.fa-angles-up', emoji: '▲', margin: false }
+                ]);
+            }
+        };
+
         // ============================== Initialization ==============================
         window.addEventListener('load', updateSticky);
         window.addEventListener('resize', updateSticky);
 
+        initAllIcons();
         markCopyable();
         updateSummary();
     });
