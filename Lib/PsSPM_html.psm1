@@ -361,8 +361,21 @@ $ExBottom
         // ============================== Summary Update ==============================
         const updateSummary = () => {
             if (!summary) return;
+
+            const statusHeader = document.querySelector('th[data-column="status"]');
+            const columnIndex = statusHeader.cellIndex;
             const visibleCount = rowCache.reduce((count, { row }) => count + (row.hidden ? 0 : 1), 0);
-            summary.textContent = 'Rows: ' + visibleCount + ' of ' + rowCache.length;
+            
+            let countOn = 0;
+            let countOff = 0;
+            
+            rowCache.forEach(({ row }) => {
+                const text = row.cells[columnIndex]?.textContent.trim();
+                if (text === 'Online') countOn++;
+                else if (text === 'Offline') countOff++;
+            });
+
+            summary.textContent = 'Rows: ' + visibleCount + ' of ' + rowCache.length + ' | Printers: Online ' + countOn + ' / Offline ' + countOff;
         };
 
         // ============================== Chunked Filtering ==============================
