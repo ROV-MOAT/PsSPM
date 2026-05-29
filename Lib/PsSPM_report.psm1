@@ -158,15 +158,15 @@ function Add-CsvPrinterRow {
     )
 
     $row = [PSCustomObject]@{
-        "IP"    = $PrinterIP
-        "Ping"  = $TcpStatus
-        "Name"  = $PrinterData.PName
-        "MAC"   = $PrinterData.PMac
-        "Model" = $PrinterData.Model
-        "S/N"   = $PrinterData.Serial
-        "Black" = $PrinterData.BlackCount
-        "Color" = $PrinterData.ColorCount
-        "Total" = $PrinterData.TotalCount
+        "IP"        = $PrinterIP
+        "Status"    = $TcpStatus
+        "Name"      = $PrinterData.PName
+        "MAC"       = $PrinterData.PMac
+        "Model"     = $PrinterData.Model
+        "S/N"       = $PrinterData.Serial
+        "Black"     = $PrinterData.BlackCount
+        "Color"     = $PrinterData.ColorCount
+        "Total"     = $PrinterData.TotalCount
         "C Toner %" = $TonerLevels.TC
         "M Toner %" = $TonerLevels.TM
         "Y Toner %" = $TonerLevels.TY

@@ -275,7 +275,7 @@ $Global:FinalHtml = @"
     <thead>
         <tr>
             <th data-column="ip"><span>IP</span></th>
-            <th data-column="ping"><span>Ping</span></th>
+            <th data-column="status"><span>Status</span></th>
             <th data-column="name"><span>Name</span></th>
             <th data-column="mac"><span>MAC</span></th>
             <th data-column="model"><span>Model</span></th>
