@@ -368,14 +368,16 @@ $ExBottom
             
             let countOn = 0;
             let countOff = 0;
+            let countErr = 0;
             
             rowCache.forEach(({ row }) => {
                 const text = row.cells[columnIndex]?.textContent.trim();
                 if (text === 'Online') countOn++;
                 else if (text === 'Offline') countOff++;
+                else if (text === 'Error') countErr++;
             });
 
-            summary.textContent = 'Rows: ' + visibleCount + ' of ' + rowCache.length + ' | Printers: Online ' + countOn + ' / Offline ' + countOff;
+            summary.textContent = 'Rows: ' + visibleCount + ' of ' + rowCache.length + ' | Status: Online ' + countOn + ' / Offline ' + countOff + ' / Error ' + countErr;
         };
 
         // ============================== Chunked Filtering ==============================
