@@ -655,7 +655,7 @@ $ExBottom
             return !isEmpty;
         };
         
-        // ============================== Universal Icon Handler ==============================
+        // ============================== Icon Handler ==============================
         const initAllIcons = () => {
             if (!hasFontAwesome()) {
                 document.querySelectorAll('#reportTable th').forEach(th => {
